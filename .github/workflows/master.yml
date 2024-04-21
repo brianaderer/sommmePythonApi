@@ -16,8 +16,8 @@ jobs:
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avzr --delete --exclude='/cred/' --exclude='/logs/'
-          path: /files
-          remote_path: ~/sommmePythonApi/
+          path: /
+          remote_path: ~/files/
           remote_host: 3.139.108.78
           remote_port: 22
           remote_user: sshuser
