@@ -1,4 +1,4 @@
-name: Deploy to SpinUpWP
+name: Deploy API Master
 
 on:
   push:
@@ -11,6 +11,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.12'  # Specify the Python version you are using
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Rsync Node Directory
         uses: burnett01/rsync-deployments@6.0.0
