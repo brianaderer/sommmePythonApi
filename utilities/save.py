@@ -25,6 +25,7 @@ class Save:
             db = self.s.Firebase.db
             self.props = db.collection('properties')
             self.bevs = db.collection('beverages')
+            self.flights = db.collection('flights')
 
     def check_looped_terms(self, wine):
         query = self.bevs
@@ -44,7 +45,14 @@ class Save:
         return (next(iter(wine['classes'][0].values()))).lower()
 
     def create_flight(self, wines, id):
-        return None
+        flight = {
+            'wines' : wines,
+            'id' : id,
+        }
+        doc_ref = self.flights.document()
+        doc_ref.set(flight)
+        # print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
+
 
     def get_document_by_id(self, doc_id, coll):
         doc_ref = coll.document(doc_id)
