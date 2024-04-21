@@ -44,15 +44,14 @@ class Save:
     def get_collection(self, wine):
         return (next(iter(wine['classes'][0].values()))).lower()
 
-    def create_flight(self, wines, id):
+    def create_flight(self, wines, owner_id):
         flight = {
-            'wines' : wines,
-            'id' : id,
+            'wines': wines,
+            'owner': owner_id,
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
         # print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
-
 
     def get_document_by_id(self, doc_id, coll):
         doc_ref = coll.document(doc_id)
@@ -141,7 +140,6 @@ class Save:
         if dict1.keys() != dict2.keys():
             return False
         return all(self.are_values_equal(dict1[key], dict2[key]) for key in dict1)
-
 
     def save_all_wines(self, all_wines):
         wine_flight = []
