@@ -30,7 +30,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd files
           python3 -m pip install --upgrade pip
           virtualenv env
           source env/bin/activate
