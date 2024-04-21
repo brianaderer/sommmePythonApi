@@ -17,18 +17,21 @@ jobs:
         with:
           python-version: '3.10.12'  # Specify the Python version you are using
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Rsync Node Directory
         uses: burnett01/rsync-deployments@6.0.0
         with:
-          switches: -avzr --delete --exclude='/cred/' --exclude='/logs/'
+          switches: -avzr --delete --exclude='/private/' --exclude='/tmp/'
           path: /
           remote_path: ~/files/
           remote_host: 3.139.108.78
           remote_port: 22
           remote_user: sshuser
           remote_key: ${{ secrets.SSH_DEPLOY_KEY }}
+
+      - name: Install dependencies
+        run: |
+          cd files
+          python3 -m pip install --upgrade pip
+          virtualenv env
+          source env/bin/activate
+          pip install -r requirements.txt
