@@ -1,8 +1,10 @@
 import singleton
-
+import os
 
 class Save:
+    response = {}
     props = None
+    path = None
     correlations = {
         'producers': ['cuvees'],
         'cuvees': ['appellations', 'colors'],
@@ -32,7 +34,7 @@ class Save:
         for field, value in wine.items():
             if field in self.skip_terms:
                 continue
-            query = query.where(field, '==', value)
+            query = query.where(field_path=field, op_string='==', value=value)
 
         # After building the query with all necessary conditions, retrieve the documents
         documents = query.get()
@@ -51,7 +53,8 @@ class Save:
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
-        # print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
+        self.response.update({'flight_id': doc_ref.id})
+        #print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
 
     def get_document_by_id(self, doc_id, coll):
         doc_ref = coll.document(doc_id)
@@ -159,6 +162,12 @@ class Save:
         self.create_flight(wine_flight, 0)
         for rich_wine in self.rich_wines:
             self.update_terms(rich_wine)
+            try:
+                os.remove(self.path)
+                self.response.update({'deleted': True})
+
+            except:
+                self.response.update({'deleted': False})
 
     def get_term(self, key, wine):
         if self.is_list(wine[key]):
@@ -169,7 +178,7 @@ class Save:
         for item in items:
             collection_ref = self.props.document('items').collection(key)
             # Query to find documents where the 'value' field is the same as wine[key]
-            documents = collection_ref.where('value', '==', item).get()
+            documents = collection_ref.where(field_path='value', op_string='==', value=item).get()
 
             if documents:
                 # If documents are found, print and return the ID of the first document found

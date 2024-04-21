@@ -17,3 +17,6 @@ class Singleton:
             cls._instance.Firebase = Firebase()
             cls._instance.Save = Save()
         return cls._instance
+
+    def hello(self):
+        return 'world'

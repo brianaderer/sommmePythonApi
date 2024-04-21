@@ -5,7 +5,6 @@ import singleton
 
 
 class Parser:
-
     def __init__(self):
         self.unit_pattern = r'^\$(\/bottle|\/case|\/oz)'
         self.wine_pattern = r'[\S]* - [\S]* - [\S]*'
