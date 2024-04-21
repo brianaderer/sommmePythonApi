@@ -24,19 +24,19 @@ class API:
         # Define a function within the setup_routes method
         # And then use the decorator from the instance variable app
 
-        @self.app.get("/")
+        @self.app.get("/api/")
         def read_root():
             return {self.s.hello()}
 
-        @self.app.get("/items/{user_id}")
+        @self.app.get("/api/items/{user_id}")
         def read_item(user_id: int, q: Union[str, None] = None):
             return {"user_id": user_id, "q": q}
 
-        @self.app.post("/files/")
+        @self.app.post("/api/files/")
         async def create_file(file: Annotated[bytes, File()]):
             return {"file_size": len(file)}
 
-        @self.app.post("/uploadfile/{user_id}")
+        @self.app.post("/api/uploadfile/{user_id}")
         async def create_upload_file(
                 user_id: Annotated[str, Path(title="The ID of the item to get")],
                 file: UploadFile | None = None,
