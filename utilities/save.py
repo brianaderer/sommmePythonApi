@@ -82,13 +82,18 @@ class Save:
                         for correlation in correlations:
                             if correlation in wine:
                                 new_value = wine[correlation]
-                                existing_value = doc_data.get(correlation)
-                                # Check for changes and update if necessary
-                                if not self.are_values_equal(existing_value, new_value):
+                                existing_value = doc_data.get(correlation, [])
+                                # Merging lists containing dictionaries
+                                if isinstance(existing_value, list) and isinstance(new_value, list):
+                                    updated_list = self.merge_lists_of_dicts(existing_value, new_value)
+                                    if updated_list != existing_value:
+                                        data_to_update[correlation] = updated_list
+                                elif existing_value != new_value:
                                     data_to_update[correlation] = new_value
 
                         if data_to_update:
                             document_ref.update(data_to_update)
+            #                 print(f"Updated document at {key} with data: {data_to_update}")
             #             else:
             #                 print(f"No updates needed for {key}; data is identical.")
             #         else:
@@ -96,6 +101,19 @@ class Save:
             #     else:
             #         print(f"Document reference for {key} not retrieved, unable to update.")
             # print('\n')
+
+    def merge_lists_of_dicts(self, list1, list2):
+        """
+        Merge two lists of dictionaries, combining dictionaries based on their content,
+        avoiding duplicates.
+        """
+        temp_dict = {}
+        for d in list1 + list2:
+            # Here we convert dictionary items to a hashable form - tuple of tuples
+            key = tuple(sorted(d.items()))
+            if key not in temp_dict:
+                temp_dict[key] = d
+        return list(temp_dict.values())
 
     def are_values_equal(self, val1, val2):
         """
