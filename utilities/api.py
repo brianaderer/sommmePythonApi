@@ -61,11 +61,14 @@ class API:
             if item:
                 results.update({"item": item})
             path = 'tmp/' + filename + '.pdf'
+            self.s.Save.owner_id = user_id
             self.s.Save.path = path
             if file:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
                     results.update({"filename" : file.filename})
+            self.s.Save.reset()
+            self.s.Parser.reset()
             self.s.Parser.load(path)
             results.update(self.s.Save.response)
             return results

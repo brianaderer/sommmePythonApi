@@ -6,6 +6,23 @@ import singleton
 
 class Parser:
     def __init__(self):
+        self.lookup = None
+        self.s = None
+        self.wine_complete = None
+        self.current_terms = None
+        self.terms = None
+        self.all_wines = None
+        self.date_pattern = None
+        self.current_wine = None
+        self.vintage_pattern = None
+        self.provi_pattern = None
+        self.bottle_pattern = None
+        self.case_pattern = None
+        self.wine_pattern = None
+        self.unit_pattern = None
+        self.reset()
+
+    def reset(self):
         self.unit_pattern = r'^\$(\/bottle|\/case|\/oz)'
         self.wine_pattern = r'[\S]* - [\S]* - [\S]*'
         self.case_pattern = r'\((\d)[a-z]*\)'
@@ -19,17 +36,17 @@ class Parser:
         self.current_terms = []
         self.wine_complete = False
         self.s = singleton.Singleton()
-        self.lookup={
-            'Class' : 'classes',
-            'Grape' : 'grapes',
-            'Appellation' : 'appellations',
-            'Color' : 'colors',
-            'cuvee' : 'cuvees',
-            'Producer' : 'producers',
-            'Region' : 'regions',
-            'SKU' : 'skus',
-            'Size' : 'sizes',
-            'Type' : 'types',
+        self.lookup = {
+            'Class': 'classes',
+            'Grape': 'grapes',
+            'Appellation': 'appellations',
+            'Color': 'colors',
+            'cuvee': 'cuvees',
+            'Producer': 'producers',
+            'Region': 'regions',
+            'SKU': 'skus',
+            'Size': 'sizes',
+            'Type': 'types',
         }
         print('Initialized')
 
@@ -71,10 +88,13 @@ class Parser:
             self.current_wine['cuvee'] = parsed_str.replace(' ' + vintage.group(), '')
         else:
             self.current_wine['cuvee'] = parsed_str
+
     def parse(self, string):
         return string.split(', ')
+
     def parse_size(self, string):
-        return string.split (' × ')
+        return string.split(' × ')
+
     def parse_wine(self, wine):
         parsed_wine = {}
         for key in wine:

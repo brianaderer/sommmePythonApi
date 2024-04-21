@@ -1,10 +1,12 @@
 import singleton
 import os
 
+
 class Save:
     response = {}
     props = None
     path = None
+    owner_id = 0
     correlations = {
         'producers': ['cuvees'],
         'cuvees': ['appellations', 'colors'],
@@ -22,6 +24,10 @@ class Save:
         self.s = singleton.Singleton()
         self.instantiate_firebase()
 
+    def reset(self):
+        self.rich_wine = {}
+        self.rich_wines = []
+
     def instantiate_firebase(self):
         if self.props is None:
             db = self.s.Firebase.db
@@ -34,7 +40,7 @@ class Save:
         for field, value in wine.items():
             if field in self.skip_terms:
                 continue
-            query = query.where(field_path=field, op_string='==', value=value)
+            query = query.where(field, '==', value)
 
         # After building the query with all necessary conditions, retrieve the documents
         documents = query.get()
@@ -49,12 +55,12 @@ class Save:
     def create_flight(self, wines, owner_id):
         flight = {
             'wines': wines,
-            'owner': owner_id,
+            'owner': self.owner_id,
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
         self.response.update({'flight_id': doc_ref.id})
-        #print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
+        # print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
 
     def get_document_by_id(self, doc_id, coll):
         doc_ref = coll.document(doc_id)
@@ -162,12 +168,11 @@ class Save:
         self.create_flight(wine_flight, 0)
         for rich_wine in self.rich_wines:
             self.update_terms(rich_wine)
-            try:
-                os.remove(self.path)
-                self.response.update({'deleted': True})
-
-            except:
-                self.response.update({'deleted': False})
+        try:
+            os.remove(self.path)
+            self.response.update({'deleted': True})
+        except:
+            self.response.update({'deleted': False})
 
     def get_term(self, key, wine):
         if self.is_list(wine[key]):
