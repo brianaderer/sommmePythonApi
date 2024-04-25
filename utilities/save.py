@@ -1,6 +1,7 @@
 import singleton
 import os
 import time
+import re
 
 
 class Save:
@@ -54,12 +55,18 @@ class Save:
     def get_collection(self, wine):
         return (next(iter(wine['classes'][0].values()))).lower()
 
+    def title_case(self, sentence):
+        # This function uses regular expressions to find words and capitalize them
+        return re.sub(r"[A-Za-z]+('[A-Za-z]+)?",
+                      lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),
+                      sentence)
+
     def create_flight(self, wines, owner_id):
         flight = {
             'wines': wines,
             'owner': self.owner_id,
             'timestamp': int(time.time()),
-            'name': self.filename.replace('.pdf', '').capitalize(),
+            'name': self.title_case(self.filename.replace('.pdf', '')),
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
