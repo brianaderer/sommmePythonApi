@@ -67,6 +67,7 @@ class API:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
                     results.update({"filename" : file.filename})
+                    self.s.Save.filename = file.filename
             self.s.Save.reset()
             self.s.Parser.reset()
             self.s.Parser.load(path)

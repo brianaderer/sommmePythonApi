@@ -1,9 +1,11 @@
 import singleton
 import os
+import time
 
 
 class Save:
     response = {}
+    filename = None
     props = None
     path = None
     owner_id = 0
@@ -56,6 +58,8 @@ class Save:
         flight = {
             'wines': wines,
             'owner': self.owner_id,
+            'timestamp': time.time(),
+            'name': self.filename.replace('.pdf', '').capitalize(),
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
