@@ -23,7 +23,7 @@ jobs:
           switches: -avzr --delete --exclude='/private/' --exclude='/tmp/'
           path: /
           remote_path: ~/files/
-          remote_host: 3.139.108.78
+          remote_host: 18.117.10.19
           remote_port: 22
           remote_user: sshuser
           remote_key: ${{ secrets.SSH_DEPLOY_KEY }}
