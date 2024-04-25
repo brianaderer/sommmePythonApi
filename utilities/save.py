@@ -58,7 +58,7 @@ class Save:
         flight = {
             'wines': wines,
             'owner': self.owner_id,
-            'timestamp': time.time(),
+            'timestamp': int(time.time()),
             'name': self.filename.replace('.pdf', '').capitalize(),
         }
         doc_ref = self.flights.document()
