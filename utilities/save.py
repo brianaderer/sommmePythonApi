@@ -190,6 +190,7 @@ class Save:
             items = wine[key]
         else:
             items = [wine[key]]
+        return_items = []
         # Get the collection reference where the documents would be
         for item in items:
             collection_ref = self.props.document('items').collection(key)
@@ -200,14 +201,14 @@ class Save:
                 # If documents are found, print and return the ID of the first document found
                 doc_id = documents[0].id
                 # print(f"Document with the same value already exists, ID: {doc_id}")
-                return {doc_id: item}
+                return_items.append({doc_id: item})
             else:
                 # If no documents are found, create a new one
                 new_doc_ref = collection_ref.document()  # Create a new document reference
                 new_doc_ref.set({'value': item})
                 # print("New document created with ID:", new_doc_ref.id)
-                return {new_doc_ref.id: item}
-
+                return_items.append({new_doc_ref.id: item})
+        return return_items
     def create_rich_wine(self, wine):
         key_list = ''
         if not hasattr(self, 'rich_wine'):
@@ -221,7 +222,7 @@ class Save:
                 self.rich_wine[key] = []  # Ensure there is a list to append to
 
             term = self.get_term(key, wine)  # Avoid using 'id' as it is a built-in function
-            self.rich_wine[key].append(term)
+            self.rich_wine[key] = term
 
         self.rich_wines.append(self.rich_wine.copy())  # Append a copy of the rich_wine to preserve its current state
         self.rich_wine = {}

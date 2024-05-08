@@ -100,8 +100,10 @@ class Parser:
             if key in self.lookup:
                 if self.lookup[key] == 'regions':
                     list = self.parse(wine[key])
-                    parsed_wine['countries'] = list[1]
-                    parsed_wine['regions'] = list[0]
+                    if len(list) > 1:
+                        parsed_wine['countries'] = list[1]
+                    if len(list) > 0:
+                        parsed_wine['regions'] = list[0]
                 elif self.lookup[key] == 'grapes':
                     parsed_wine['grapes'] = self.parse(wine[key])
                 elif self.lookup[key] == 'sizes':
