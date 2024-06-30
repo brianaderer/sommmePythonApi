@@ -62,11 +62,14 @@ class Save:
                       sentence)
 
     def create_flight(self, wines, owner_id):
+        indices = list(range(len(wines)))
         flight = {
             'wines': wines,
             'owner': self.owner_id,
             'timestamp': int(time.time()),
             'name': self.title_case(self.filename.replace('.pdf', '')),
+            'versions': {'1': indices},
+            'currentVersion': 1,
         }
         doc_ref = self.flights.document()
         doc_ref.set(flight)
@@ -209,6 +212,7 @@ class Save:
                 # print("New document created with ID:", new_doc_ref.id)
                 return_items.append({new_doc_ref.id: item})
         return return_items
+
     def create_rich_wine(self, wine):
         key_list = ''
         if not hasattr(self, 'rich_wine'):
