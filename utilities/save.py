@@ -175,6 +175,8 @@ class Save:
                 del rich_wine['sizes']
                 del rich_wine['cases']
                 new_doc_ref.set(rich_wine)  # Upload the entire dictionary as the document
+                self.s.Cacher.set_data(key='wines:' + new_doc_ref.id, data=rich_wine, path=''
+                                                                                           '')
                 wine_flight.append(new_doc_ref.id)
             else:
                 wine_flight.append(documents[0].id)
@@ -208,7 +210,9 @@ class Save:
             else:
                 # If no documents are found, create a new one
                 new_doc_ref = collection_ref.document()  # Create a new document reference
-                new_doc_ref.set({'value': item})
+                write_data = {'value': item, 'owners': ['provi_upload']}
+                new_doc_ref.set(write_data)
+                self.s.Cacher.set_data(key= key + ':' + new_doc_ref.id, data=write_data, path='')
                 # print("New document created with ID:", new_doc_ref.id)
                 return_items.append({new_doc_ref.id: item})
         return return_items
@@ -227,6 +231,7 @@ class Save:
 
             term = self.get_term(key, wine)  # Avoid using 'id' as it is a built-in function
             self.rich_wine[key] = term
+        self.rich_wine['owners'] = ['provi_upload']
 
         self.rich_wines.append(self.rich_wine.copy())  # Append a copy of the rich_wine to preserve its current state
         self.rich_wine = {}

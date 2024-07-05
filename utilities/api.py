@@ -1,10 +1,11 @@
-from typing import Union, Annotated
-from fastapi import FastAPI, File, UploadFile, Path, Form
+from typing import Union, Annotated, Optional
+from fastapi import FastAPI, File, UploadFile, Path, Form, Query
 from pydantic import BaseModel
 import singleton
 import hashlib
 import time
 import sys
+import json
 if sys.version_info < (3, 6):
     import sha3
 
@@ -40,6 +41,17 @@ class API:
         async def check_producer(text: Annotated[str, Path(title="The ID of the item to get")]):
             return self.s.Query.get_producers(filter_value=text)
 
+        @self.app.post("/api/getCountries/")
+        async def create_get_countries(
+                producer: str = Form(...),
+                cuvees: str = Form(...),
+                vintage: int = Form(...),
+        ):
+
+            producer_dict = json.loads(producer)
+            cuvees_dict = json.loads(cuvees)
+
+            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict, vintage=vintage)
 
         @self.app.post("/api/addWine")
         async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()], vintage: Annotated[str, Form()]):

@@ -147,5 +147,5 @@ class Parser:
                     self.all_wines.append(self.current_wine)
                     self.current_wine = {'full_title': ''}
                     self.wine_complete = False
-
+        print(self.all_wines)
         self.s.Save.save_all_wines(self.all_wines)
