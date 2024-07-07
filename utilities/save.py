@@ -212,7 +212,7 @@ class Save:
                 new_doc_ref = collection_ref.document()  # Create a new document reference
                 write_data = {'value': item, 'owners': ['provi_upload']}
                 new_doc_ref.set(write_data)
-                self.s.Cacher.set_data(key= key + ':' + new_doc_ref.id, data=write_data, path='')
+                self.s.Cacher.set_data(key=key + ':' + new_doc_ref.id, data=write_data, path='')
                 # print("New document created with ID:", new_doc_ref.id)
                 return_items.append({new_doc_ref.id: item})
         return return_items
@@ -235,3 +235,9 @@ class Save:
 
         self.rich_wines.append(self.rich_wine.copy())  # Append a copy of the rich_wine to preserve its current state
         self.rich_wine = {}
+
+    def create_prop(self, prop, data, uid):
+        doc_ref = self.props.document('items').collection(prop).document()
+        set_data = {'value': data, 'owners': [uid]}
+        doc_ref.set(set_data)
+        return {doc_ref.id: set_data}

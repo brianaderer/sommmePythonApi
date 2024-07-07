@@ -3,6 +3,7 @@ from utilities.firebase import Firebase
 from utilities.save import Save
 from utilities.queryDB import Query
 from utilities.cacher import Cacher
+from utilities.similarity import Similarity
 
 class Singleton:
     _instance = None
@@ -18,6 +19,7 @@ class Singleton:
             cls._instance.Save = Save()
             cls._instance.Query = Query()
             cls._instance.Cacher = Cacher()
+            cls._instance.Similarity = Similarity()
         return cls._instance
 
     def hello(self):

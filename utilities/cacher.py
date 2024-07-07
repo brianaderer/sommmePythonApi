@@ -6,7 +6,8 @@ import string
 
 class Cacher:
     PRODUCER_LOCK = 'producer_lock'
-    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries']
+    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'vintage', 'grapes']
+
     def __init__(self):
         self.s = singleton.Singleton()
         self.r = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -75,16 +76,16 @@ class Cacher:
 
         try:
             result = self.r.json().set(name=key, path='$' + path, obj=data)
-            self.r.expire(key,
-                          3 * 60 * 60)  # Set expiration time to 3 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
+            # self.r.expire(key,
+            #               3 * 60 * 60)  # Set expiration time to 3 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
             return result
         finally:
             # Release the lock
             self.lock_or_unlock(False)
 
-    def key_search(self, value, key = 'producers', limit=True):
+    def key_search(self, value, key='producers', limit=True):
         escape_chars = ',.<>{}[]"\'`:;!@#$%^&*()-+=~'
-        search_str = ''.join([' ' if char in escape_chars else char for char in value])
+        search_str = ''.join([' ' if char in escape_chars else char for char in str(value)])
 
         search = '@value:*' + search_str + '*' if limit else '*'
 
@@ -93,8 +94,8 @@ class Cacher:
 
         modified_results = []
         for i, item in enumerate(results):
-            if isinstance(item, str) and item.startswith( key + ':'):
-                modified_results.append(item[len( key + ':'):])
+            if isinstance(item, str) and item.startswith(key + ':'):
+                modified_results.append(item[len(key + ':'):])
             else:
                 modified_results.append(item)
 
@@ -105,7 +106,8 @@ class Cacher:
 
             try:
                 index_creation_command = (
-                    'FT.CREATE', f'{collection}_idx', 'ON', 'JSON', 'PREFIX', '1', f'{collection}:', 'SCHEMA', '$.value', 'AS',
+                    'FT.CREATE', f'{collection}_idx', 'ON', 'JSON', 'PREFIX', '1', f'{collection}:', 'SCHEMA',
+                    '$.value', 'AS',
                     'value', 'TEXT'
                 )
                 # Execute the index creation command

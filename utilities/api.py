@@ -41,11 +41,18 @@ class API:
         async def check_producer(text: Annotated[str, Path(title="The ID of the item to get")]):
             return self.s.Query.get_producers(filter_value=text)
 
+        @self.app.post("/api/dlSim/")
+        async def get_sim(
+                st1: str = Form(...),
+                st2: str = Form(...),
+        ):
+            return self.s.Similarity.dl_sim(st1,st2)
+
         @self.app.post("/api/getCountries/")
         async def create_get_countries(
                 producer: str = Form(...),
                 cuvees: str = Form(...),
-                vintage: int = Form(...),
+                vintage: int | str = Form(...),
         ):
 
             producer_dict = json.loads(producer)
