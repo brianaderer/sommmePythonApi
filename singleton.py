@@ -4,6 +4,8 @@ from utilities.save import Save
 from utilities.queryDB import Query
 from utilities.cacher import Cacher
 from utilities.similarity import Similarity
+from utilities.recommender import Recommender
+from utilities.crons import Crons
 
 class Singleton:
     _instance = None
@@ -20,6 +22,8 @@ class Singleton:
             cls._instance.Query = Query()
             cls._instance.Cacher = Cacher()
             cls._instance.Similarity = Similarity()
+            cls._instance.Recommender = Recommender()
+            cls._instance.Crons = Crons()
         return cls._instance
 
     def hello(self):

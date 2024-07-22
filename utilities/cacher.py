@@ -1,12 +1,14 @@
 import singleton as singleton
 import redis
 import time
-import string
+from unidecode import unidecode
+import re
 
 
 class Cacher:
     PRODUCER_LOCK = 'producer_lock'
-    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'vintage', 'grapes']
+    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'vintage', 'grapes',
+                           'cuvees']
 
     def __init__(self):
         self.s = singleton.Singleton()
@@ -70,11 +72,15 @@ class Cacher:
     def retrieve_cached_object(self, key):
         return self.ensure_key_exists(key=key)
 
+    def search_prep(self, str):
+        return unidecode(re.sub(r'[^\w\s]', '', str).lower().replace(' ', '-'))
+
     def set_data(self, key, data, path=''):
         if not self.lock_or_unlock(True, 10):
             raise TimeoutError("Failed to acquire lock within the specified timeout period.")
 
         try:
+            data['search_text'] = self.search_prep(str=data['value'])
             result = self.r.json().set(name=key, path='$' + path, obj=data)
             # self.r.expire(key,
             #               3 * 60 * 60)  # Set expiration time to 3 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
@@ -83,14 +89,14 @@ class Cacher:
             # Release the lock
             self.lock_or_unlock(False)
 
-    def key_search(self, value, key='producers', limit=True):
-        escape_chars = ',.<>{}[]"\'`:;!@#$%^&*()-+=~'
-        search_str = ''.join([' ' if char in escape_chars else char for char in str(value)])
+    def key_search(self, value, key='producers', limit=True, num_results=10000):
+        search_str = self.search_prep(str=value).replace("-", ' ')
+        search = f"@search:{search_str}" if limit else '*'
+        search_command = ['FT.SEARCH', f'{key}_idx', search, 'LIMIT', '0', str(num_results)]
 
-        search = '@value:*' + search_str + '*' if limit else '*'
+        print(f"Search command: {search_command}")  # Print the search command for debugging
 
-        # Perform the search
-        results = self.r.execute_command('FT.SEARCH', f'{key}_idx', search)
+        results = self.r.execute_command(*search_command)
 
         modified_results = []
         for i, item in enumerate(results):
@@ -98,17 +104,15 @@ class Cacher:
                 modified_results.append(item[len(key + ':'):])
             else:
                 modified_results.append(item)
-
         return modified_results
 
     def create_sub_indices(self):
         for collection in self.indexed_collections:
-
             try:
                 index_creation_command = (
                     'FT.CREATE', f'{collection}_idx', 'ON', 'JSON', 'PREFIX', '1', f'{collection}:', 'SCHEMA',
-                    '$.value', 'AS',
-                    'value', 'TEXT'
+                    '$.search_text', 'AS',
+                    'search', 'TEXT'
                 )
                 # Execute the index creation command
                 self.r.execute_command(*index_creation_command)
@@ -118,35 +122,26 @@ class Cacher:
 
     def create_producer_index(self):
         try:
-            # Check if the index exists
-            self.r.execute_command('FT.INFO', 'producers_idx')
-            print("Index 'producers_idx' already exists.")
+            index_creation_command = (
+                'FT.CREATE', 'producers_idx', 'ON', 'JSON', 'PREFIX', '1', 'producers:', 'SCHEMA', '$.search_text',
+                'AS',
+                'search', 'TEXT'
+            )
+            self.r.execute_command(*index_creation_command)
+            print("Index 'producers_idx' created successfully.")
         except redis.exceptions.ResponseError as e:
-            if 'Unknown Index name' in str(e):
-                index_creation_command = (
-                    'FT.CREATE', 'producers_idx', 'ON', 'JSON', 'PREFIX', '1', 'producers:', 'SCHEMA', '$.value', 'AS',
-                    'value', 'TEXT'
-                )
-                self.r.execute_command(*index_creation_command)
-                print("Index 'producers_idx' created successfully.")
-            else:
-                raise e
+            print(e)
 
-        try:
-            # Check if the index exists
-            self.r.execute_command('FT.INFO', 'cuvees_idx')
-            print("Index 'cuvees_idx' already exists.")
-        except redis.exceptions.ResponseError as e:
-            if 'Unknown Index name' in str(e):
-                index_creation_command = (
-                    'FT.CREATE', 'producers_idx', 'ON', 'JSON', 'PREFIX', '1', 'producers:', 'SCHEMA', '$.value', 'AS',
-                    'value', 'TEXT'
-                )
-                # Execute the index creation command
-                self.r.execute_command(*index_creation_command)
-                print("Index 'producers_idx' created successfully.")
-            else:
-                raise e
+        # try:
+        #     index_creation_command = (
+        #         'FT.CREATE', 'cuvees_by_producer_idx', 'ON', 'JSON', 'PREFIX', '1', 'producers:', 'SCHEMA', '$.value', 'AS',
+        #         'value', 'TEXT'
+        #     )
+        #     # Execute the index creation command
+        #     self.r.execute_command(*index_creation_command)
+        #     print("Index 'producers_idx' created successfully.")
+        # except redis.exceptions.ResponseError as e:
+        #     print(e)
 
     def get_data(self, key, path):
         if not self.lock_or_unlock(True, 10):
@@ -157,3 +152,8 @@ class Cacher:
         finally:
             # Release the lock
             self.lock_or_unlock(False)
+
+    def get_collection(self, class_name):
+        index = class_name.replace('"', '')
+        # Perform the FT.SEARCH command to return all documents
+        return self.r.execute_command('FT.SEARCH', f"{index}_idx", '*', 'LIMIT', 0, 10000000)

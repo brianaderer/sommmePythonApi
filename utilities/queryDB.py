@@ -1,6 +1,7 @@
 import singleton as singleton
-from unidecode import unidecode
 import json
+from unidecode import unidecode
+import re
 
 
 class Query:
@@ -73,16 +74,12 @@ class Query:
         for producer in producer_data:
             key = self.get_key(producer)
             path = ''
-            data = self.s.Cacher.get_data(key='producers:' + key, path=path)
-            if data is None or not len(data):
-                self.s.Cacher.set_data(key='producers:' + key, data=producer[key], path=path)
+            self.s.Cacher.set_data(key='producers:' + key, data=producer[key], path=path)
         self.s.Cacher.create_producer_index()
 
     def parse_redis_search_results(self, results):
         # The first element is the total number of results
-
         total_results = results[0]
-
         # Initialize an empty dictionary to hold the parsed results
         parsed_results = {}
 
@@ -90,10 +87,8 @@ class Query:
         for i in range(1, len(results), 2):
             key = results[i]  # This is the document identifier
             json_data = results[i + 1][1]  # The JSON data is the second element in the list
-
             # Parse the JSON data into a dictionary
             parsed_results[key] = json.loads(json_data)
-
         return total_results, parsed_results
 
     def get_producers(self, filter_value, with_keys=False):
@@ -104,13 +99,11 @@ class Query:
             # Return the entire dictionary if with_keys is True
             filtered_producers = [
                                      {key: producer} for key, producer in producer_data.items()
-                                     if filter_value.lower() in unidecode(producer['value']).lower()
                                  ][:10]
         else:
             # Return only the values if with_keys is False
             filtered_producers = [
                                      producer for producer in producer_data.values()
-                                     if filter_value.lower() in unidecode(producer['value']).lower()
                                  ][:10]
         return filtered_producers
 
@@ -179,7 +172,6 @@ class Query:
             datum = json.loads(data[i + 1][1])
             value = datum
             parsed_data.append({key: value})
-
         return parsed_data
 
     def add_to_suggestions(self, coll, data, key=0):
@@ -203,10 +195,9 @@ class Query:
         return return_wine
 
     def assemble_wine_data(self, producer, filter_cuvee, vintage):
-        # self.update_producers_cache()
-        # self.update_sub_caches()
         self.reset()
         created_cuvee_object = self.create_cuvee_object(cuvee=filter_cuvee)
+        cuvee_key = self.get_key(created_cuvee_object)
         producer_dict, parsed_cuvee, parsed_vintage = self.parse_incoming_suggestions(producer=producer,
                                                                                       cuvee=filter_cuvee,
                                                                                       vintage=vintage)
@@ -214,7 +205,8 @@ class Query:
         if parsed_producer is None:
             possible_producers = self.return_coll('producers')
         else:
-            possible_producers = self.get_producers(filter_value=unidecode(parsed_producer['value']), with_keys=True)
+            str = parsed_producer['value']
+            possible_producers = self.get_producers(filter_value=str, with_keys=True)
         for producer in possible_producers:
             key = self.get_key(producer)
             data = producer[key]
@@ -222,6 +214,9 @@ class Query:
             filter_text = '' if parsed_cuvee is None else parsed_cuvee
             producer_val = producer[key]
             self.filter_cuvees(cuvees=producer_val['cuvees'], filter_text=unidecode(filter_text))
+        if len(possible_producers) == 1:
+            producer_cuvees = possible_producers[0][self.get_key(possible_producers[0])]['cuvees']
+            self.filtered_cuvees = [cuvee for cuvee in producer_cuvees if self.get_key(cuvee) == cuvee_key]
         action_cuvees = self.filtered_cuvees if len(self.filtered_cuvees) else self.all_cuvees
         if len(action_cuvees) == 1:
             # if False:
@@ -301,6 +296,7 @@ class Query:
         for key in list(self.suggestions.keys()):
             if key not in self.excluded_indices and (not self.suggestions[key] or not len(self.suggestions[key])):
                 data = self.s.Cacher.key_search(value='', key=key, limit=False)
+
                 parsed_data = self.parse_redis_search_value(data)
                 self.suggestions[key] = parsed_data
 

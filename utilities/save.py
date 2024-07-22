@@ -13,11 +13,12 @@ class Save:
     correlations = {
         'producers': ['cuvees'],
         'cuvees': ['appellations', 'colors'],
-        'appellations': ['regions'],
+        'appellations': ['regions', 'countries'],
         'regions': ['countries'],
         'skus': ['sizes', 'cases'],
-        'colors': ['types'],
-        'types': ['classes']
+        'colors': ['types', 'classes'],
+        'types': ['classes'],
+        'grapes': ['colors', 'types'],
     }
     skip_terms = ['full_title', 'sizes', 'skus', 'cases']
     rich_wine = {}

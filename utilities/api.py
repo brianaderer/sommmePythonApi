@@ -41,6 +41,15 @@ class API:
         async def check_producer(text: Annotated[str, Path(title="The ID of the item to get")]):
             return self.s.Query.get_producers(filter_value=text)
 
+        @self.app.post("/api/recs/")
+        async def get_recs(
+                slug: str = Form(...),
+                text: str = Form(...),
+        ):
+            data = self.s.Recommender.get_recommendation(class_name=slug, text=text)
+            json_data = json.dumps(data)
+            return json_data
+
         @self.app.post("/api/dlSim/")
         async def get_sim(
                 st1: str = Form(...),
