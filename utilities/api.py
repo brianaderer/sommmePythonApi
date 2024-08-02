@@ -45,8 +45,9 @@ class API:
         async def get_recs(
                 slug: str = Form(...),
                 text: str = Form(...),
+                deps: str | None = Form(None),
         ):
-            data = self.s.Recommender.get_recommendation(class_name=slug, text=text)
+            data = self.s.Recommender.get_recommendation(class_name=slug, text=text, deps=deps)
             json_data = json.dumps(data)
             return json_data
 
@@ -61,13 +62,12 @@ class API:
         async def create_get_countries(
                 producer: str = Form(...),
                 cuvees: str = Form(...),
-                vintage: int | str = Form(...),
+                vintage: str = Form(...),
         ):
-
             producer_dict = json.loads(producer)
             cuvees_dict = json.loads(cuvees)
-
-            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict, vintage=vintage)
+            vintage_dict = json.loads(vintage)
+            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict, vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
         async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()], vintage: Annotated[str, Form()]):

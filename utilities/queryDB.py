@@ -160,8 +160,10 @@ class Query:
         return {k: v for k, v in data.items() if k not in keys_to_drop}
 
     def parse_incoming_suggestions(self, producer, cuvee, vintage):
-        producer_dict = {0: {'owners': producer['owners'], 'cuvees': producer['cuvees'], 'value': producer['value'],
-                             'key': producer['id']}}
+        producer_key = self.get_key(producer)
+        producer_val = producer[producer_key]
+        producer_dict = {0: {'owners': producer_val['owners'], 'cuvees': producer_val['cuvees'], 'value': producer_val['value'],
+                             'key': producer_key}}
         cuvee_str = cuvee[self.get_key(cuvee)]
         return [producer_dict, cuvee_str, vintage]
 
@@ -181,7 +183,8 @@ class Query:
     def create_cuvee_object(self, cuvee):
         key = self.get_key(cuvee)
         value = cuvee[key]
-        return {key: {'value': value, 'id': key, 'appellations': [], 'colors': [], 'owners': cuvee['owners']}}
+        print(value)
+        return {key: {'value': value['value'], 'id': key, 'appellations': [], 'colors': [], 'owners': value['owners']}}
 
     def expand_wine(self, wine):
         return_wine = {}
@@ -205,13 +208,14 @@ class Query:
         if parsed_producer is None:
             possible_producers = self.return_coll('producers')
         else:
-            str = parsed_producer['value']
-            possible_producers = self.get_producers(filter_value=str, with_keys=True)
+            string = parsed_producer['value']
+            possible_producers = self.get_producers(filter_value=string, with_keys=True)
         for producer in possible_producers:
             key = self.get_key(producer)
             data = producer[key]
             self.add_to_suggestions(coll='producers', data=data, key=key)
-            filter_text = '' if parsed_cuvee is None else parsed_cuvee
+            print(parsed_cuvee)
+            filter_text = '' if parsed_cuvee is None else parsed_cuvee['value']
             producer_val = producer[key]
             self.filter_cuvees(cuvees=producer_val['cuvees'], filter_text=unidecode(filter_text))
         if len(possible_producers) == 1:
@@ -313,15 +317,17 @@ class Query:
         return False
 
     def get_vintage(self, vintage):
-        found_vintage = self.s.Cacher.key_search(key='vintage', value=vintage)
+        vintage_val = str(vintage[self.get_key(vintage)]['value'])
+        found_vintage = self.s.Cacher.key_search(key='vintage', value=(vintage_val))
         parsed_vintage = self.parse_redis_search_value(data=found_vintage)
         if not len(parsed_vintage):
             possible_vintages = self.get_all_from_coll('vintage')
-            returned_vintage = self.get_vintage_object(collection=possible_vintages, vintage=vintage)
+            parsed_vintage_val = vintage[self.get_key(vintage)]['value']
+            returned_vintage = self.get_vintage_object(collection=possible_vintages, vintage=parsed_vintage_val)
             if not returned_vintage:
-                returned_vintage = self.s.Save.create_prop(prop='vintage', data=str(vintage), uid=1)
+                returned_vintage = self.s.Save.create_prop(prop='vintage', data=str(parsed_vintage_val), uid=1)
 
             key = self.get_key(returned_vintage)
-            self.s.Cacher.set_data(key='vintage:' + key, path='', data=returned_vintage)
+            self.s.Cacher.set_data(key='vintage:' + key, path='', data=returned_vintage[key])
             parsed_vintage = [returned_vintage]
         return parsed_vintage
