@@ -8,4 +8,6 @@ set max search results
 
 @TODO search methodology should be refactored and this should be in a .conf
 
+redis-stack-server
+
 FT.CONFIG SET MAXSEARCHRESULTS -1

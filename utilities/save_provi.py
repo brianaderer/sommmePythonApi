@@ -4,7 +4,7 @@ import time
 import re
 
 
-class Save:
+class SaveProvi:
     response = {}
     filename = None
     props = None

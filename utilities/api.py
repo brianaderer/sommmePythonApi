@@ -6,12 +6,14 @@ import hashlib
 import time
 import sys
 import json
+
 if sys.version_info < (3, 6):
     import sha3
 
 
 class Item(BaseModel):
     name: str
+
 
 class API:
 
@@ -51,12 +53,26 @@ class API:
             json_data = json.dumps(data)
             return json_data
 
+        @self.app.post("/api/updateUser/")
+        async def update_user(
+                data: str = Form(...),
+        ):
+            response = self.s.User.update_user(data=data)
+            return True if response.update_time else False
+
+        @self.app.post("/api/createWine/")
+        async def update_user(
+                wineData: str = Form(...),
+                flightData: str = Form(...),
+        ):
+            return self.s.HandleUserWine.handle_upload(wine=wineData, flight=flightData)
+
         @self.app.post("/api/dlSim/")
         async def get_sim(
                 st1: str = Form(...),
                 st2: str = Form(...),
         ):
-            return self.s.Similarity.dl_sim(st1,st2)
+            return self.s.Similarity.dl_sim(st1, st2)
 
         @self.app.post("/api/getCountries/")
         async def create_get_countries(
@@ -67,10 +83,12 @@ class API:
             producer_dict = json.loads(producer)
             cuvees_dict = json.loads(cuvees)
             vintage_dict = json.loads(vintage)
-            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict, vintage=vintage_dict)
+            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
+                                                   vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
-        async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()], vintage: Annotated[str, Form()]):
+        async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()],
+                           vintage: Annotated[str, Form()]):
             return {"success": True}
 
         @self.app.post("/api/uploadfile/{user_id}")
@@ -98,15 +116,15 @@ class API:
             if item:
                 results.update({"item": item})
             path = 'tmp/' + filename + '.pdf'
-            self.s.Save.owner_id = user_id
-            self.s.Save.path = path
+            self.s.SaveProvi.owner_id = user_id
+            self.s.SaveProvi.path = path
             if file:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
-                    results.update({"filename" : file.filename})
-                    self.s.Save.filename = file.filename
-            self.s.Save.reset()
+                    results.update({"filename": file.filename})
+                    self.s.SaveProvi.filename = file.filename
+            self.s.SaveProvi.reset()
             self.s.Parser.reset()
             self.s.Parser.load(path)
-            results.update(self.s.Save.response)
+            results.update(self.s.SaveProvi.response)
             return results

@@ -19,6 +19,8 @@ class Recommender:
             key = self.s.Query.get_key(d)
             item = d[key]
             for dep in deps:
+                if not len(dep):
+                    break
                 dep_key = self.s.Query.get_key(dep)
                 wine_val = dep[dep_key]
                 wine_key = self.s.Query.get_key(wine_val)
