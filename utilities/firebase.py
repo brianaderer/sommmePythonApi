@@ -15,8 +15,3 @@ class Firebase:
         firebase_admin.initialize_app(self.cred)
         self.db = firestore.client()
         self.s = singleton.Singleton()
-
-    def save_attribute(self, coll, data, key):
-        print(coll)
-        print(key)
-        print(data)

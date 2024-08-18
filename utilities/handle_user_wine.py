@@ -5,7 +5,7 @@ import singleton as singleton
 class HandleUserWine:
     wine = None
     flight = None
-    id = None
+    flight_id = None
     producer_name = None
     found_wine = {}
     wine_identity = [
@@ -37,9 +37,6 @@ class HandleUserWine:
                 break
         return {val: label}
 
-    def create_in_db(self):
-        print(self.creates)
-
     def handle_upload(self, flight, wine, owner):
         self.parse_incoming(flight, wine)
         for key in list(self.wine.keys()):
@@ -56,20 +53,23 @@ class HandleUserWine:
         self.s.Save.create_rich_wine(self.creates, owner)
         update_wine = self.s.Save.rich_wines[0]
         self.s.Save.update_terms(update_wine)
-        # print(self.built_wine)
-        # print(self.s.Save.correlations)
+        self.s.CleanseWine.handle_wine_cleanse(wine=update_wine, owner_id=owner)
+        self.s.Flight.update_flight(wine_id=self.s.CleanseWine.wine_id, owner_id=owner, flight_id=self.flight_id)
         return True
 
-    def parse_incoming(self, flight, wine):
-        self.s.Save.rich_wines = []
-        self.s.Save.rich_wine = {}
+    def reset(self):
+        self.s.Save.reset()
+        self.wine = None
+        self.flight = None
+        self.flight_id = None
+        self.producer_name = None
         self.found_wine = {}
         self.creates = {}
-        self.producer_name = None
         self.has_identity = False
-        self.wine = None
-        self.id = None
-        self.flight = None
+        self.built_wine = {}
+
+    def parse_incoming(self, flight, wine):
+        self.reset()
         self.wine = json.loads(wine)
         self.flight = json.loads(flight)
-        self.id = self.flight['id']
+        self.flight_id = self.flight['id']

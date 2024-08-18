@@ -132,7 +132,7 @@ class API:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
                     results.update({"filename": file.filename})
-                    self.s.SaveProvi.filename = file.filename
+                    save.filename = file.filename
             save.reset()
             parser = Parser()
             parser.reset()

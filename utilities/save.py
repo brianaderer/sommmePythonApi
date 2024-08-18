@@ -63,19 +63,23 @@ class Save:
                       sentence)
 
     def create_flight(self, wines, owner_id):
-        indices = list(range(len(wines)))
-        flight = {
-            'wines': wines,
-            'owner': self.owner_id,
-            'timestamp': int(time.time()),
-            'name': self.title_case(self.filename.replace('.pdf', '')),
-            'versions': {'1': indices},
-            'currentVersion': 1,
-        }
-        doc_ref = self.flights.document()
-        doc_ref.set(flight)
-        self.response.update({'flight_id': doc_ref.id})
-        # print(f"Flight with ID {doc_ref.id} has been created with the following wines: {wines}")
+        # indices = list(range(len(wines)))
+        # flight = {
+        #     'wines': wines,
+        #     'owner': self.owner_id,
+        #     'timestamp': int(time.time()),
+        #     'name': self.title_case(self.filename.replace('.pdf', '')),
+        #     'versions': {'1': indices},
+        #     'currentVersion': 1,
+        # }
+        # doc_ref = self.flights.document()
+        # doc_ref.set(flight)
+        self.response = self.s.Flight.create_flight(wines=wines,
+                                                    owner_id=self.owner_id,
+                                                    name=self.title_case(self.filename.replace('.pdf', '')),
+                                                    flights=self.flights,
+                                                    response=self.response
+                                                    )
 
     def get_document_by_id(self, doc_id, coll):
         doc_ref = coll.document(doc_id)
@@ -87,7 +91,6 @@ class Save:
             return None  # Or handle it differently depending on your requirements
 
     def update_terms(self, wine):
-        print(wine)
         for field, value in wine.items():
             if field not in self.correlations:
                 continue
@@ -113,16 +116,9 @@ class Save:
                                 elif existing_value != new_value:
                                     data_to_update[correlation] = new_value
                         if data_to_update:
-                            # print('updating')
-                            # print(field)
-                            # print(term)
-                            # print(data_to_update)
                             document_ref.update(data_to_update)
                             path = field + ':' + document_ref.id
-                            # print(path)
                             data_array = self.s.Cacher.get_data(key=path)
-                            # print('existing data')
-                            # print(data_array)
                             data = data_array[0]
                             data_keys = list(data.keys())
                             update_keys = list(data_to_update.keys())

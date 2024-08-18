@@ -8,6 +8,8 @@ from utilities.recommender import Recommender
 from utilities.crons import Crons
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
+from utilities.cleanse_wine import CleanseWine
+from utilities.flight import Flight
 
 
 class Singleton:
@@ -17,9 +19,7 @@ class Singleton:
         if cls._instance is None:
             print("Creating the Singleton object")
             cls._instance = super(Singleton, cls).__new__(cls)
-            # Instantiate and attach child classes directly
             cls._instance.Parser = Parser()
-            # cls._instance.Parser2 = Parser2()
             cls._instance.Firebase = Firebase()
             cls._instance.Save = Save()
             cls._instance.Query = Query()
@@ -29,4 +29,6 @@ class Singleton:
             cls._instance.Crons = Crons()
             cls._instance.User = User()
             cls._instance.HandleUserWine = HandleUserWine()
+            cls._instance.CleanseWine = CleanseWine()
+            cls._instance.Flight = Flight()
         return cls._instance
