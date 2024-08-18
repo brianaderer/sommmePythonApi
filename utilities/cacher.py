@@ -89,6 +89,16 @@ class Cacher:
             # Release the lock
             self.lock_or_unlock(False)
 
+    def get_data(self, key, path=''):
+        if not self.lock_or_unlock(True, 10):
+            raise TimeoutError("Failed to acquire lock within the specified timeout period.")
+
+        try:
+            return self.r.json().get(key, '$' + path)
+        finally:
+            # Release the lock
+            self.lock_or_unlock(False)
+
     def key_search(self, value, key='producers', limit=True, num_results=10000):
         search_str = self.search_prep(str=value).replace("-", ' ')
         search = f"@search:{search_str}" if limit else '*'
@@ -143,15 +153,6 @@ class Cacher:
         # except redis.exceptions.ResponseError as e:
         #     print(e)
 
-    def get_data(self, key, path):
-        if not self.lock_or_unlock(True, 10):
-            raise TimeoutError("Failed to acquire lock within the specified timeout period.")
-
-        try:
-            return self.r.json().get(key, '$' + path)
-        finally:
-            # Release the lock
-            self.lock_or_unlock(False)
 
     def get_collection(self, class_name):
         index = class_name.replace('"', '')

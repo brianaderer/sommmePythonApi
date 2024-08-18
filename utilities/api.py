@@ -6,9 +6,12 @@ import hashlib
 import time
 import sys
 import json
-
-if sys.version_info < (3, 6):
-    import sha3
+from utilities.queryDB import Query
+from utilities.save import Save
+from utilities.parser import Parser
+from utilities.recommender import Recommender
+from utilities.user import User
+from utilities.handle_user_wine import HandleUserWine
 
 
 class Item(BaseModel):
@@ -41,7 +44,8 @@ class API:
 
         @self.app.get("/api/getProducers/{text}")
         async def check_producer(text: Annotated[str, Path(title="The ID of the item to get")]):
-            return self.s.Query.get_producers(filter_value=text)
+            query = Query()
+            return query.get_producers(filter_value=text)
 
         @self.app.post("/api/recs/")
         async def get_recs(
@@ -49,7 +53,8 @@ class API:
                 text: str = Form(...),
                 deps: str | None = Form(None),
         ):
-            data = self.s.Recommender.get_recommendation(class_name=slug, text=text, deps=deps)
+            recommender = Recommender()
+            data = recommender.get_recommendation(class_name=slug, text=text, deps=deps)
             json_data = json.dumps(data)
             return json_data
 
@@ -57,15 +62,18 @@ class API:
         async def update_user(
                 data: str = Form(...),
         ):
-            response = self.s.User.update_user(data=data)
+            user = User()
+            response = user.update_user(data=data)
             return True if response.update_time else False
 
         @self.app.post("/api/createWine/")
         async def update_user(
+                owner: str = Form(...),
                 wineData: str = Form(...),
                 flightData: str = Form(...),
         ):
-            return self.s.HandleUserWine.handle_upload(wine=wineData, flight=flightData)
+            handle_user_wine = HandleUserWine()
+            return handle_user_wine.handle_upload(wine=wineData, flight=flightData, owner=owner.replace('"', ''))
 
         @self.app.post("/api/dlSim/")
         async def get_sim(
@@ -83,7 +91,8 @@ class API:
             producer_dict = json.loads(producer)
             cuvees_dict = json.loads(cuvees)
             vintage_dict = json.loads(vintage)
-            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
+            query = Query()
+            return query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
                                                    vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
@@ -116,15 +125,17 @@ class API:
             if item:
                 results.update({"item": item})
             path = 'tmp/' + filename + '.pdf'
-            self.s.SaveProvi.owner_id = user_id
-            self.s.SaveProvi.path = path
+            save = Save()
+            save.owner_id = user_id
+            save.path = path
             if file:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
                     results.update({"filename": file.filename})
                     self.s.SaveProvi.filename = file.filename
-            self.s.SaveProvi.reset()
-            self.s.Parser.reset()
-            self.s.Parser.load(path)
-            results.update(self.s.SaveProvi.response)
+            save.reset()
+            parser = Parser()
+            parser.reset()
+            parser.load(path)
+            results.update(save.response)
             return results

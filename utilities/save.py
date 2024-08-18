@@ -4,7 +4,7 @@ import time
 import re
 
 
-class SaveProvi:
+class Save:
     response = {}
     filename = None
     props = None
@@ -87,15 +87,14 @@ class SaveProvi:
             return None  # Or handle it differently depending on your requirements
 
     def update_terms(self, wine):
+        print(wine)
         for field, value in wine.items():
             if field not in self.correlations:
                 continue
-
             collection = self.props.document('items').collection(field)
             correlations = self.correlations[field]
-
             for term in value:
-                (key, local_value), = term.items()
+                (key, local_value) = list(term.items())[0]
                 document_ref = self.get_document_by_id(key, collection)  # Ensure this is a DocumentReference
                 if document_ref is not None:
                     doc_snapshot = document_ref.get()
@@ -113,17 +112,26 @@ class SaveProvi:
                                         data_to_update[correlation] = updated_list
                                 elif existing_value != new_value:
                                     data_to_update[correlation] = new_value
-
                         if data_to_update:
+                            # print('updating')
+                            # print(field)
+                            # print(term)
+                            # print(data_to_update)
                             document_ref.update(data_to_update)
-            #                 print(f"Updated document at {key} with data: {data_to_update}")
-            #             else:
-            #                 print(f"No updates needed for {key}; data is identical.")
-            #         else:
-            #             print(f"Document {key} not found, unable to update.")
-            #     else:
-            #         print(f"Document reference for {key} not retrieved, unable to update.")
-            # print('\n')
+                            path = field + ':' + document_ref.id
+                            # print(path)
+                            data_array = self.s.Cacher.get_data(key=path)
+                            # print('existing data')
+                            # print(data_array)
+                            data = data_array[0]
+                            data_keys = list(data.keys())
+                            update_keys = list(data_to_update.keys())
+                            for key in update_keys:
+                                if key in data_keys:
+                                    data[key] = list(set(data_to_update[key] + data[key]))
+                                else:
+                                    data[key] = data_to_update[key]
+                            self.s.Cacher.set_data(key=field + ':' + document_ref.id, data=data)
 
     def merge_lists_of_dicts(self, list1, list2):
         """
@@ -191,13 +199,17 @@ class SaveProvi:
         except:
             self.response.update({'deleted': False})
 
-    def get_term(self, key, wine):
+    def get_term(self, key, wine, owner):
+        # print(key)
+        # print(wine)
+        # print(owner)
         if self.is_list(wine[key]):
             items = wine[key]
         else:
             items = [wine[key]]
+        # print(items)
         return_items = []
-        # Get the collection reference where the documents would be
+        # # Get the collection reference where the documents would be
         for item in items:
             collection_ref = self.props.document('items').collection(key)
             # Query to find documents where the 'value' field is the same as wine[key]
@@ -209,31 +221,29 @@ class SaveProvi:
                 # print(f"Document with the same value already exists, ID: {doc_id}")
                 return_items.append({doc_id: item})
             else:
+                print('writing item')
                 # If no documents are found, create a new one
                 new_doc_ref = collection_ref.document()  # Create a new document reference
-                write_data = {'value': item, 'owners': ['provi_upload']}
+                write_data = {'value': item, 'owners': [owner]}
+                print(write_data)
                 new_doc_ref.set(write_data)
                 self.s.Cacher.set_data(key=key + ':' + new_doc_ref.id, data=write_data, path='')
-                # print("New document created with ID:", new_doc_ref.id)
+                print("New document created with ID:", new_doc_ref.id)
                 return_items.append({new_doc_ref.id: item})
         return return_items
 
-    def create_rich_wine(self, wine):
+    def create_rich_wine(self, wine, owner='provi_upload'):
         key_list = ''
-        if not hasattr(self, 'rich_wine'):
-            self.rich_wine = {}  # Initialize rich_wine as a dictionary if not already done
-
-        if not hasattr(self, 'rich_wines'):
-            self.rich_wines = []  # Initialize rich_wines as a list if not already done
+        self.rich_wine = {}  # Initialize rich_wine as a dictionary if not already done
+        self.rich_wines = []  # Initialize rich_wines as a list if not already done
 
         for key in wine:
             if key not in self.rich_wine:
                 self.rich_wine[key] = []  # Ensure there is a list to append to
 
-            term = self.get_term(key, wine)  # Avoid using 'id' as it is a built-in function
+            term = self.get_term(key, wine, owner)  # Avoid using 'id' as it is a built-in function
             self.rich_wine[key] = term
-        self.rich_wine['owners'] = ['provi_upload']
-
+        self.rich_wine['owners'] = [owner]
         self.rich_wines.append(self.rich_wine.copy())  # Append a copy of the rich_wine to preserve its current state
         self.rich_wine = {}
 
@@ -241,4 +251,5 @@ class SaveProvi:
         doc_ref = self.props.document('items').collection(prop).document()
         set_data = {'value': data, 'owners': [uid]}
         doc_ref.set(set_data)
+        # self.s.Cacher.set_data(key=prop + ':' + doc_ref.id, data=set_data)
         return {doc_ref.id: set_data}

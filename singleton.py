@@ -1,6 +1,6 @@
 from utilities.parser import Parser
 from utilities.firebase import Firebase
-from utilities.save_provi import SaveProvi
+from utilities.save import Save
 from utilities.queryDB import Query
 from utilities.cacher import Cacher
 from utilities.similarity import Similarity
@@ -21,7 +21,7 @@ class Singleton:
             cls._instance.Parser = Parser()
             # cls._instance.Parser2 = Parser2()
             cls._instance.Firebase = Firebase()
-            cls._instance.SaveProvi = SaveProvi()
+            cls._instance.Save = Save()
             cls._instance.Query = Query()
             cls._instance.Cacher = Cacher()
             cls._instance.Similarity = Similarity()

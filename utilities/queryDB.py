@@ -163,7 +163,7 @@ class Query:
         producer_key = self.get_key(producer)
         producer_val = producer[producer_key]
         producer_dict = {0: {'owners': producer_val['owners'], 'cuvees': producer_val['cuvees'], 'value': producer_val['value'],
-                             'key': producer_key}}
+                             'db_id': producer_key}}
         cuvee_str = cuvee[self.get_key(cuvee)]
         return [producer_dict, cuvee_str, vintage]
 
@@ -184,7 +184,7 @@ class Query:
         key = self.get_key(cuvee)
         value = cuvee[key]
         print(value)
-        return {key: {'value': value['value'], 'id': key, 'appellations': [], 'colors': [], 'owners': value['owners']}}
+        return {key: {'value': value['value'], 'db_id': key, 'appellations': [], 'colors': [], 'owners': value['owners']}}
 
     def expand_wine(self, wine):
         return_wine = {}
@@ -214,7 +214,6 @@ class Query:
             key = self.get_key(producer)
             data = producer[key]
             self.add_to_suggestions(coll='producers', data=data, key=key)
-            print(parsed_cuvee)
             filter_text = '' if parsed_cuvee is None else parsed_cuvee['value']
             producer_val = producer[key]
             self.filter_cuvees(cuvees=producer_val['cuvees'], filter_text=unidecode(filter_text))
