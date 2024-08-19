@@ -9,18 +9,23 @@ class Flight:
         self.flight_ref = self.s.Save.flights
 
     def create_flight(self, wines, owner_id, name, flights, response):
-        indices = list(range(len(wines)))
         flight = {
             'wines': wines,
             'owner': owner_id,
             'timestamp': int(time.time()),
             'name': name,
-            'versions': {'1': indices},
-            'currentVersion': 1,
         }
+        if len(wines):
+            indices = list(range(len(wines)))
+            flight['versions'] = {'1': indices}
+            flight['currentVersion'] = 1
+        else:
+            flight['currentVersion'] = 0
+            flight['versions'] = {'0': []}
         doc_ref = flights.document()
         doc_ref.set(flight)
-        return response.update({'flight_id': doc_ref.id})
+        response.update({'flight_id': doc_ref.id})
+        return response
 
     def update_flight(self, wine_id, owner_id, flight_id):
         doc_ref = self.flight_ref.document(flight_id)
@@ -39,3 +44,6 @@ class Flight:
             current_flight['versions'] = versions
             current_flight['currentVersion'] = int(new_flight_idx)
             doc_ref.update(current_flight)
+
+    def handle_create_wine(self, owner, name):
+        return self.create_flight(wines=[], owner_id=owner, name=name, flights=self.flight_ref, response={})

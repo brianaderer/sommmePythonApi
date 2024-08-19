@@ -12,6 +12,7 @@ from utilities.parser import Parser
 from utilities.recommender import Recommender
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
+from utilities.flight import Flight
 
 
 class Item(BaseModel):
@@ -74,6 +75,13 @@ class API:
         ):
             handle_user_wine = HandleUserWine()
             return handle_user_wine.handle_upload(wine=wineData, flight=flightData, owner=owner.replace('"', ''))
+        @self.app.post("/api/createFlight/")
+        async def update_user(
+                owner: str = Form(...),
+                name: str = Form(...),
+        ):
+            flight = Flight()
+            return flight.handle_create_wine(owner=owner.replace('"', ''), name=name.replace('"', ''))
 
         @self.app.post("/api/dlSim/")
         async def get_sim(

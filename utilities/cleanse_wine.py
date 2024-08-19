@@ -106,7 +106,7 @@ class CleanseWine:
 
     def create_wine(self):
         doc_ref = self.bev_ref.add(self.user_wine)
-        self.wine = {doc_ref.id: self.user_wine}
+        self.wine = {doc_ref[1].id: self.user_wine}
         self.wine_id = doc_ref[1].id
 
     def set_up_wine_filters(self):
