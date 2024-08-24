@@ -67,6 +67,13 @@ class API:
             response = user.update_user(data=data)
             return True if response.update_time else False
 
+        @self.app.post("/api/searchUser/")
+        async def update_user(
+                data: str = Form(...),
+        ):
+            user = User()
+            return user.search_for_user(data=data)
+
         @self.app.post("/api/createWine/")
         async def update_user(
                 owner: str = Form(...),
@@ -75,6 +82,7 @@ class API:
         ):
             handle_user_wine = HandleUserWine()
             return handle_user_wine.handle_upload(wine=wineData, flight=flightData, owner=owner.replace('"', ''))
+
         @self.app.post("/api/createFlight/")
         async def update_user(
                 owner: str = Form(...),
@@ -101,7 +109,7 @@ class API:
             vintage_dict = json.loads(vintage)
             query = Query()
             return query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
-                                                   vintage=vintage_dict)
+                                            vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
         async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()],

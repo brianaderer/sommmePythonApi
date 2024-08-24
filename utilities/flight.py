@@ -28,6 +28,7 @@ class Flight:
         return response
 
     def update_flight(self, wine_id, owner_id, flight_id):
+        response = {}
         doc_ref = self.flight_ref.document(flight_id)
         doc = doc_ref.get()
         current_flight = doc.to_dict()
@@ -44,6 +45,12 @@ class Flight:
             current_flight['versions'] = versions
             current_flight['currentVersion'] = int(new_flight_idx)
             doc_ref.update(current_flight)
+            response.update({'updated': True})
+        else:
+            response.update({'updated': False})
+        response.update({'flightData': current_flight})
+        response.update({'flightId': doc_ref.id})
+        return response
 
     def handle_create_wine(self, owner, name):
         return self.create_flight(wines=[], owner_id=owner, name=name, flights=self.flight_ref, response={})

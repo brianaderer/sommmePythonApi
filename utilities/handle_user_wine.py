@@ -54,8 +54,7 @@ class HandleUserWine:
         update_wine = self.s.Save.rich_wines[0]
         self.s.Save.update_terms(update_wine)
         self.s.CleanseWine.handle_wine_cleanse(wine=update_wine, owner_id=owner)
-        self.s.Flight.update_flight(wine_id=self.s.CleanseWine.wine_id, owner_id=owner, flight_id=self.flight_id)
-        return True
+        return self.s.Flight.update_flight(wine_id=self.s.CleanseWine.wine_id, owner_id=owner, flight_id=self.flight_id)
 
     def reset(self):
         self.s.Save.reset()

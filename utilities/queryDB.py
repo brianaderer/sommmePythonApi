@@ -324,7 +324,7 @@ class Query:
             parsed_vintage_val = vintage[self.get_key(vintage)]['value']
             returned_vintage = self.get_vintage_object(collection=possible_vintages, vintage=parsed_vintage_val)
             if not returned_vintage:
-                returned_vintage = self.s.SaveProvi.create_prop(prop='vintage', data=str(parsed_vintage_val), uid=1)
+                returned_vintage = self.s.Save.create_prop(prop='vintage', data=str(parsed_vintage_val), uid=1)
 
             key = self.get_key(returned_vintage)
             self.s.Cacher.set_data(key='vintage:' + key, path='', data=returned_vintage[key])

@@ -6,6 +6,8 @@ import singleton as singleton
 class User:
     db = None
     first = True
+    screenNameFilter = None
+    userResults = []
 
     def __init__(self):
         self.s = singleton.Singleton()
@@ -31,7 +33,22 @@ class User:
                                                                          'city'])
         )
 
-    def update_user(self, data):
+    def search_for_user(self, data: str) -> list:
+        self.userResults = []
+        search_text = json.loads(data)
+        self.screenNameFilter = self.s.Firebase.FieldFilter('screenName', '<=', search_text)
+        col_ref = self.s.Firebase.db.collection('users')
+        docs = (
+            col_ref
+            .where(filter=self.screenNameFilter)
+            .stream()
+        )
+        for doc in docs:
+            self.userResults.append({doc.id: doc.to_dict()})
+        return self.userResults
+
+
+    def update_user(self, data: str) -> dict:
         decoded_data = json.loads(data)
         uid = decoded_data['uid']
         email = decoded_data['email']
@@ -55,10 +72,16 @@ class User:
             decoded_data['city'] = ''
         if 'searchable' not in decoded_data:
             decoded_data['searchable'] = True
+        if 'screenName' not in decoded_data:
+            decoded_data['screenName'] = ''
+        if 'firstName' not in decoded_data:
+            decoded_data['firstName'] = ''
+        if 'lastName' not in decoded_data:
+            decoded_data['lastName'] = ''
         if 'addSalutations' not in decoded_data:
             decoded_data['addSalutations'] = True
         document_data = {
-            'searchText': self.create_user_search(email, decoded_data),
+            'searchText': self.create_user_search(decoded_data['preferredEmail'], decoded_data),
             'preferredEmail': decoded_data['preferredEmail'],
             'company': decoded_data['company'],
             'jobTitle': decoded_data['jobTitle'],
@@ -70,5 +93,8 @@ class User:
             'searchable': decoded_data['searchable'],
             'addSalutations': decoded_data['addSalutations'],
             'displayName': decoded_data['displayName'],
+            'screenName': decoded_data['screenName'],
+            'firstName': decoded_data['firstName'],
+            'lastName': decoded_data['lastName'],
         }
         return self.db.collection('users').document(uid).set(document_data)
