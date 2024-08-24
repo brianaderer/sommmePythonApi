@@ -62,6 +62,28 @@ class Save:
                       lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),
                       sentence)
 
+    def combine_unique_dicts(self, list1, list2):
+        """
+        Safely combines two lists of dictionaries into a single list, containing no duplicates.
+
+        :param list1: The first list of dictionaries.
+        :param list2: The second list of dictionaries.
+        :return: A new list containing the unique dictionaries from both lists.
+        """
+        if not isinstance(list1, list) or not all(isinstance(d, dict) for d in list1):
+            raise ValueError("list1 must be a list of dictionaries")
+
+        if not isinstance(list2, list) or not all(isinstance(d, dict) for d in list2):
+            raise ValueError("list2 must be a list of dictionaries")
+
+        combined_list = list1.copy()  # Start with a copy of list1
+
+        for dict2 in list2:
+            if dict2 not in combined_list:
+                combined_list.append(dict2)
+
+        return combined_list
+
     def create_flight(self, wines, owner_id):
         # indices = list(range(len(wines)))
         # flight = {
@@ -124,7 +146,7 @@ class Save:
                             update_keys = list(data_to_update.keys())
                             for key in update_keys:
                                 if key in data_keys:
-                                    data[key] = list(set(data_to_update[key] + data[key]))
+                                    data[key] = self.combine_unique_dicts(data[key], data_to_update[key])
                                 else:
                                     data[key] = data_to_update[key]
                             self.s.Cacher.set_data(key=field + ':' + document_ref.id, data=data)
@@ -180,8 +202,8 @@ class Save:
                 del rich_wine['sizes']
                 del rich_wine['cases']
                 new_doc_ref.set(rich_wine)  # Upload the entire dictionary as the document
-                self.s.Cacher.set_data(key='wines:' + new_doc_ref.id, data=rich_wine, path=''
-                                                                                           '')
+                rich_wine['value'] = list(rich_wine['full_title'][0].values())[0]
+                self.s.Cacher.set_data(key='wines:' + new_doc_ref.id, data=rich_wine, path='')
                 wine_flight.append(new_doc_ref.id)
             else:
                 wine_flight.append(documents[0].id)
@@ -196,9 +218,6 @@ class Save:
             self.response.update({'deleted': False})
 
     def get_term(self, key, wine, owner):
-        # print(key)
-        # print(wine)
-        # print(owner)
         if self.is_list(wine[key]):
             items = wine[key]
         else:
@@ -221,7 +240,6 @@ class Save:
                 # If no documents are found, create a new one
                 new_doc_ref = collection_ref.document()  # Create a new document reference
                 write_data = {'value': item, 'owners': [owner]}
-                print(write_data)
                 new_doc_ref.set(write_data)
                 self.s.Cacher.set_data(key=key + ':' + new_doc_ref.id, data=write_data, path='')
                 print("New document created with ID:", new_doc_ref.id)
@@ -231,7 +249,6 @@ class Save:
     def create_rich_wine(self, wine, owner='provi_upload'):
         key_list = ''
         self.rich_wine = {}  # Initialize rich_wine as a dictionary if not already done
-        self.rich_wines = []  # Initialize rich_wines as a list if not already done
 
         for key in wine:
             if key not in self.rich_wine:

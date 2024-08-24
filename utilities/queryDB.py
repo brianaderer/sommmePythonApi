@@ -1,7 +1,7 @@
 import singleton as singleton
 import json
 from unidecode import unidecode
-import re
+from custom_types.UserType import UserType
 
 
 class Query:
@@ -55,6 +55,7 @@ class Query:
             self.props = self.db.collection('properties')
 
     def update_sub_caches(self):
+        pass
         for key in self.s.Cacher.indexed_collections:
             collection = self.props.document('items').collection(f'{key}')
             coll_ref = collection.get()
@@ -76,6 +77,18 @@ class Query:
             path = ''
             self.s.Cacher.set_data(key='producers:' + key, data=producer[key], path=path)
         self.s.Cacher.create_producer_index()
+
+    def update_users_cache(self):
+        collection = self.db.collection('users')
+        users = collection.get()
+        user_data = [{user.id: user.to_dict()} for user in users]
+        for user in user_data:
+            key = self.get_key(user)
+            user_obj = UserType(decoded_data=user[key])
+            data = user_obj.return_data()
+            path = ''
+            self.s.Cacher.set_data(key='users:' + key, data=data, path=path)
+        self.s.Cacher.create_user_index()
 
     def parse_redis_search_results(self, results):
         # The first element is the total number of results
@@ -183,7 +196,6 @@ class Query:
     def create_cuvee_object(self, cuvee):
         key = self.get_key(cuvee)
         value = cuvee[key]
-        print(value)
         return {key: {'value': value['value'], 'db_id': key, 'appellations': [], 'colors': [], 'owners': value['owners']}}
 
     def expand_wine(self, wine):

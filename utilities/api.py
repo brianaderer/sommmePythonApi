@@ -107,8 +107,7 @@ class API:
             producer_dict = json.loads(producer)
             cuvees_dict = json.loads(cuvees)
             vintage_dict = json.loads(vintage)
-            query = Query()
-            return query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
+            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
                                             vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
@@ -134,24 +133,21 @@ class API:
             s.update(string)
 
             filename = (s.hexdigest())
-
+            self.s.Save.reset()
             results = {"user_id": user_id}
             if q:
                 results.update({"q": q})
             if item:
                 results.update({"item": item})
             path = 'tmp/' + filename + '.pdf'
-            save = Save()
-            save.owner_id = user_id
-            save.path = path
+            self.s.Save.owner_id = user_id
+            self.s.Save.path = path
             if file:
                 with open('tmp/' + filename + '.pdf', 'wb') as f:
                     f.write(contents)
                     results.update({"filename": file.filename})
-                    save.filename = file.filename
-            save.reset()
-            parser = Parser()
-            parser.reset()
-            parser.load(path)
-            results.update(save.response)
+                    self.s.Save.filename = file.filename
+            self.s.Parser.reset()
+            self.s.Parser.load(path)
+            results.update(self.s.Save.response)
             return results

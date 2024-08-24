@@ -100,14 +100,16 @@ class Cacher:
             self.lock_or_unlock(False)
 
     def key_search(self, value, key='producers', limit=True, num_results=10000):
-        search_str = self.search_prep(str=value).replace("-", ' ')
-        search = f"@search:{search_str}" if limit else '*'
-        search_command = ['FT.SEARCH', f'{key}_idx', search, 'LIMIT', '0', str(num_results)]
+        # Break the value into words using regex to split by spaces and punctuation
+        words = re.findall(r'\w+', value)
+
+        # Construct the search query to match all words
+        search_terms = ' '.join([f'@search:*{word.lower()}*' for word in words])
+        search_command = ['FT.SEARCH', f'{key}_idx', search_terms, 'LIMIT', '0', str(num_results)]
 
         print(f"Search command: {search_command}")  # Print the search command for debugging
 
         results = self.r.execute_command(*search_command)
-
         modified_results = []
         for i, item in enumerate(results):
             if isinstance(item, str) and item.startswith(key + ':'):
@@ -139,6 +141,18 @@ class Cacher:
             )
             self.r.execute_command(*index_creation_command)
             print("Index 'producers_idx' created successfully.")
+        except redis.exceptions.ResponseError as e:
+            print(e)
+
+    def create_user_index(self):
+        try:
+            index_creation_command = (
+                'FT.CREATE', 'users_idx', 'ON', 'JSON', 'PREFIX', '1', 'users:', 'SCHEMA', '$.search_text',
+                'AS',
+                'search', 'TEXT'
+            )
+            self.r.execute_command(*index_creation_command)
+            print("Index 'users_idx' created successfully.")
         except redis.exceptions.ResponseError as e:
             print(e)
 

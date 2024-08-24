@@ -50,10 +50,10 @@ class Parser:
         print('Initialized')
 
     def load(self, file):
+        self.reset()
         pdf = load_file(file)
         # visualise(pdf)  # Uncomment to visualize the PDF content
         elements = pdf.elements
-        self.reset()
         self.parse_data(elements)
 
     def contains_pattern(self, string, pattern, case_insensitive=True):

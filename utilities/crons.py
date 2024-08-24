@@ -7,4 +7,5 @@ class Crons:
 
     def update_caches(self):
         self.s.Query.update_producers_cache()
+        self.s.Query.update_users_cache()
         self.s.Query.update_sub_caches()
