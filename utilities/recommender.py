@@ -8,7 +8,10 @@ class Recommender:
         self.s = singleton.Singleton()
 
     def get_recommendation(self, class_name, text, deps='[]'):
-        deps = json.loads(deps)
+        try:
+            deps = json.loads(deps)
+        except (ValueError, TypeError):
+            deps = []
         results = self.s.Cacher.get_collection(class_name=class_name)
         coll = self.s.Query.parse_redis_search_value(data=results)
         search_text = self.s.Cacher.search_prep(text)

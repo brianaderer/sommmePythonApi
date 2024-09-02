@@ -14,7 +14,6 @@ from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
 from utilities.flight import Flight
 
-
 class Item(BaseModel):
     name: str
 
@@ -43,10 +42,12 @@ class API:
         async def create_file(file: Annotated[bytes, File()]):
             return {"file_size": len(file)}
 
-        @self.app.get("/api/getProducers/{text}")
-        async def check_producer(text: Annotated[str, Path(title="The ID of the item to get")]):
+        @self.app.post("/api/getProducers/")
+        async def check_producer(
+                text: str = Form(...),
+        ):
             query = Query()
-            return query.get_producers(filter_value=text)
+            return query.get_producers(filter_value=text, with_keys=True)
 
         @self.app.post("/api/recs/")
         async def get_recs(
@@ -54,6 +55,7 @@ class API:
                 text: str = Form(...),
                 deps: str | None = Form(None),
         ):
+            print('called recs')
             recommender = Recommender()
             data = recommender.get_recommendation(class_name=slug, text=text, deps=deps)
             json_data = json.dumps(data)
@@ -73,6 +75,12 @@ class API:
         ):
             user = User()
             return user.search_for_user(data=data)
+        @self.app.post("/api/groupRequest/")
+        async def update_user(
+                data: str = Form(...),
+                owner: str = Form(...),
+        ):
+            return self.s.Group.create_group(data=data, owner=owner)
 
         @self.app.post("/api/createWine/")
         async def update_user(

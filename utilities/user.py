@@ -26,7 +26,7 @@ class User:
     def update_user(self, data: str) -> dict:
         decoded_data = json.loads(data)
         uid = decoded_data['uid']
-        user = UserType(decoded_data=decoded_data)
+        user = UserType(decoded_data=decoded_data, key=uid)
         document_data = user.return_data()
         self.s.Cacher.set_data('users:' + uid, document_data)
         return self.db.collection('users').document(uid).set(document_data)

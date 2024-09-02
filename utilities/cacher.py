@@ -103,8 +103,8 @@ class Cacher:
         # Break the value into words using regex to split by spaces and punctuation
         words = re.findall(r'\w+', value)
 
-        # Construct the search query to match all words
-        search_terms = ' '.join([f'@search:*{word.lower()}*' for word in words])
+        # Construct the search query to match all words, excluding single-letter words
+        search_terms = ' '.join([f'@search:*{word.lower()}*' for word in words if len(word) > 1])
         search_command = ['FT.SEARCH', f'{key}_idx', search_terms, 'LIMIT', '0', str(num_results)]
 
         print(f"Search command: {search_command}")  # Print the search command for debugging

@@ -21,10 +21,12 @@ class UserType:
     lastName = None
     decoded_data = None
 
-    def __init__(self, decoded_data: dict):
+    def __init__(self, decoded_data: dict, key: str):
         self.first = None
+        self.uid = key
         self.s = singleton.Singleton()
         self.decoded_data = self.sanitize_decoded_data(decoded_data)
+        self.email = decoded_data['email'] if 'email' in decoded_data else ''
         self.convert_decoded_to_object()
 
     def sanitize_decoded_data(self, decoded_data: dict) -> dict:
@@ -57,17 +59,23 @@ class UserType:
         if 'addSalutations' not in decoded_data:
             decoded_data['addSalutations'] = True
         decoded_data['value'] = self.create_user_search(decoded_data['preferredEmail'], decoded_data)
+        if len(decoded_data['firstName']) and len(decoded_data['lastName']):
+            decoded_data['displayName'] = decoded_data['firstName'] + ' ' + decoded_data['lastName']
         return decoded_data
 
     def add_space_if_length(self, string):
-        space = '  ' if not self.first else ''
-        if len(string):
-            self.first = False
-        return space + string if len(string) else ''
+        if string is not None:
+            space = '  ' if not self.first else ''
+            if len(string):
+                self.first = False
+            return space + string if len(string) else ''
+        else:
+            return ''
 
     def create_user_search(self, email, decoded_data):
         self.first = True
-        return self.add_space_if_length(decoded_data['displayName']) + self.add_space_if_length(
+        name = decoded_data['firstName'] + ' ' + decoded_data['lastName'] if ('firstName' and 'lastName' in decoded_data) and len( decoded_data['firstName']) and len(decoded_data['lastName']) else decoded_data['displayName']
+        return self.add_space_if_length(name) + self.add_space_if_length(
             email) + self.add_space_if_length(decoded_data['company']) + self.add_space_if_length(
             decoded_data['country']) + self.add_space_if_length(
             decoded_data['province']) + self.add_space_if_length(decoded_data[

@@ -84,7 +84,7 @@ class Query:
         user_data = [{user.id: user.to_dict()} for user in users]
         for user in user_data:
             key = self.get_key(user)
-            user_obj = UserType(decoded_data=user[key])
+            user_obj = UserType(decoded_data=user[key], key=key)
             data = user_obj.return_data()
             path = ''
             self.s.Cacher.set_data(key='users:' + key, data=data, path=path)
@@ -105,7 +105,7 @@ class Query:
         return total_results, parsed_results
 
     def get_producers(self, filter_value, with_keys=False):
-        result = self.s.Cacher.key_search(value=filter_value)
+        result = self.s.Cacher.key_search(value=self.s.Cacher.search_prep(filter_value))
         total_results, parsed_results = self.parse_redis_search_results(result)
         producer_data = parsed_results
         if with_keys:
