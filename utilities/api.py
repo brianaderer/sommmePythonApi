@@ -75,6 +75,14 @@ class API:
         ):
             user = User()
             return user.search_for_user(data=data)
+        @self.app.post("/api/groupShare/")
+        async def update_user(
+                data: str = Form(...),
+                groupId: str = Form(...),
+                ownerId: str = Form(...),
+                key: str = Form(...),
+        ):
+            return self.s.Shares.handle_group_share(data=data, group_id=groupId, owner_id=ownerId, key=key)
         @self.app.post("/api/groupRequest/")
         async def update_user(
                 data: str = Form(...),

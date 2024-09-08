@@ -30,3 +30,6 @@ class User:
         document_data = user.return_data()
         self.s.Cacher.set_data('users:' + uid, document_data)
         return self.db.collection('users').document(uid).set(document_data)
+
+    def get_user_by_id(self, user_id):
+        return self.db.collection('users').document(user_id.replace('"', '')).get().to_dict()

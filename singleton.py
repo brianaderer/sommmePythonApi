@@ -11,6 +11,8 @@ from utilities.handle_user_wine import HandleUserWine
 from utilities.cleanse_wine import CleanseWine
 from utilities.flight import Flight
 from utilities.group import Group
+from utilities.shares import Shares
+from utilities.messages import Messages
 
 
 class Singleton:
@@ -33,4 +35,6 @@ class Singleton:
             cls._instance.CleanseWine = CleanseWine()
             cls._instance.Flight = Flight()
             cls._instance.Group = Group()
+            cls._instance.Shares = Shares()
+            cls._instance.Messages = Messages()
         return cls._instance
