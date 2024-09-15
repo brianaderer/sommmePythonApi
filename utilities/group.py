@@ -36,6 +36,6 @@ class Group:
             .stream()
         )
         for doc in docs:
-            return doc.id
+            return doc.ref_id
         result = self.s.Firebase.db.collection('groups').add(self.request)
-        return result[1].id
+        return result[1].ref_id

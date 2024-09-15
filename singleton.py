@@ -9,10 +9,13 @@ from utilities.crons import Crons
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
 from utilities.cleanse_wine import CleanseWine
-from utilities.flight import Flight
+# from utilities.flight import Flight
 from utilities.group import Group
 from utilities.shares import Shares
 from utilities.messages import Messages
+from utilities.p3 import P3
+from utilities.props import Props
+from lookups.Dependencies import Dependencies
 
 
 class Singleton:
@@ -33,8 +36,11 @@ class Singleton:
             cls._instance.User = User()
             cls._instance.HandleUserWine = HandleUserWine()
             cls._instance.CleanseWine = CleanseWine()
-            cls._instance.Flight = Flight()
+            # cls._instance.Flight = Flight()
             cls._instance.Group = Group()
             cls._instance.Shares = Shares()
             cls._instance.Messages = Messages()
+            cls._instance.P3 = P3()
+            cls._instance.Dependencies = Dependencies()
+            cls._instance.Props = Props()
         return cls._instance

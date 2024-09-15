@@ -6,7 +6,7 @@ class Flight:
 
     def __init__(self):
         self.s = singleton.Singleton()
-        self.flight_ref = self.s.Save.flights
+        self.flight_ref = self.s.Save.wines
 
     def create_flight(self, wines, owner_id, name, flights, response):
         flight = {

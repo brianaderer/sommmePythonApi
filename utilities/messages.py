@@ -15,7 +15,7 @@ class Messages:
 
         if results:  # Check if results are not empty
             most_recent_message = results[0].to_dict()
-            message_id = results[0].id
+            message_id = results[0].ref_id
         else:
             most_recent_message = None
             message_id = None

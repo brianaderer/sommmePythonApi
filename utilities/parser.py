@@ -119,6 +119,7 @@ class Parser:
     def parse_data(self, elements):
         for element in elements:
             text = element.text()
+            print(text)
             parse_list = (text.split('\n'))
             if (not self.contains_pattern(parse_list[0], self.unit_pattern)
                 and not self.contains_pattern(parse_list[0], self.case_pattern)) \
@@ -148,4 +149,5 @@ class Parser:
                     self.all_wines.append(self.current_wine)
                     self.current_wine = {'full_title': ''}
                     self.wine_complete = False
-        self.s.Save.save_all_wines(self.all_wines)
+        print(len(self.all_wines))
+        # self.s.Save.save_all_wines(self.all_wines)

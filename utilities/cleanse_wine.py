@@ -75,7 +75,7 @@ class CleanseWine:
             .stream()
         )
         for doc in docs:
-            self.variants.append({doc.id: doc.to_dict()})
+            self.variants.append({doc.ref_id: doc.to_dict()})
         if len(list(variant.keys())):
             if not len(self.variants):
                 doc_ref = self.variant_ref.add({
@@ -106,8 +106,8 @@ class CleanseWine:
 
     def create_wine(self):
         doc_ref = self.bev_ref.add(self.user_wine)
-        self.wine = {doc_ref[1].id: self.user_wine}
-        self.wine_id = doc_ref[1].id
+        self.wine = {doc_ref[1].ref_id: self.user_wine}
+        self.wine_id = doc_ref[1].ref_id
 
     def set_up_wine_filters(self):
         self.wine_filter = self.s.Firebase.FieldFilter('wineId', '==', self.wine_id)
@@ -127,7 +127,7 @@ class CleanseWine:
     def parse_query_result(self):
         print('found data')
         for doc in self.result:
-            print(f"ID: {doc.id}")
+            print(f"ID: {doc.ref_id}")
 
     def execute_query(self):
         docs = (self.bev_ref
@@ -136,4 +136,4 @@ class CleanseWine:
                 .where(filter=self.vintageFilter)
                 .stream())
         for doc in docs:
-            self.returned_docs.append({doc.id: doc.to_dict()})
+            self.returned_docs.append({doc.ref_id: doc.to_dict()})

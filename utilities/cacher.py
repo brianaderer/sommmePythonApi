@@ -8,7 +8,7 @@ import re
 class Cacher:
     PRODUCER_LOCK = 'producer_lock'
     indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'vintage', 'grapes',
-                           'cuvees']
+                           'cuvees', 'sizes', 'skus', 'vintages']
 
     def __init__(self):
         self.s = singleton.Singleton()
@@ -75,16 +75,18 @@ class Cacher:
     def search_prep(self, str):
         return unidecode(re.sub(r'[^\w\s]', '', str).lower().replace(' ', '-'))
 
-    def set_data(self, key, data, path=''):
+    def set_data(self, key, data, path='', search=True, expire: int or False = False):
         if not self.lock_or_unlock(True, 10):
             raise TimeoutError("Failed to acquire lock within the specified timeout period.")
-
         try:
-            data['search_text'] = self.search_prep(str=data['value'])
+            if search:
+                data['search_text'] = self.search_prep(str=data['value'])
             result = self.r.json().set(name=key, path='$' + path, obj=data)
-            # self.r.expire(key,
-            #               3 * 60 * 60)  # Set expiration time to 3 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
+            if expire:
+                self.r.expire(key, expire)
             return result
+        except Exception as e:
+            print(e)
         finally:
             # Release the lock
             self.lock_or_unlock(False)
@@ -102,13 +104,9 @@ class Cacher:
     def key_search(self, value, key='producers', limit=True, num_results=10000):
         # Break the value into words using regex to split by spaces and punctuation
         words = re.findall(r'\w+', value)
-
         # Construct the search query to match all words, excluding single-letter words
-        search_terms = ' '.join([f'@search:*{word.lower()}*' for word in words if len(word) > 1])
+        search_terms = ' '.join([f'@search:*{self.search_prep(word)}*' for word in words if len(word) > 1])
         search_command = ['FT.SEARCH', f'{key}_idx', search_terms, 'LIMIT', '0', str(num_results)]
-
-        print(f"Search command: {search_command}")  # Print the search command for debugging
-
         results = self.r.execute_command(*search_command)
         modified_results = []
         for i, item in enumerate(results):
@@ -166,7 +164,6 @@ class Cacher:
         #     print("Index 'producers_idx' created successfully.")
         # except redis.exceptions.ResponseError as e:
         #     print(e)
-
 
     def get_collection(self, class_name):
         index = class_name.replace('"', '')

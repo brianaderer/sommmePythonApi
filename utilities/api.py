@@ -117,11 +117,11 @@ class API:
         @self.app.post("/api/getCountries/")
         async def create_get_countries(
                 producer: str = Form(...),
-                cuvees: str = Form(...),
+                cuvee: str = Form(...),
                 vintage: str = Form(...),
         ):
             producer_dict = json.loads(producer)
-            cuvees_dict = json.loads(cuvees)
+            cuvees_dict = json.loads(cuvee)
             vintage_dict = json.loads(vintage)
             return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
                                             vintage=vintage_dict)
@@ -163,7 +163,8 @@ class API:
                     f.write(contents)
                     results.update({"filename": file.filename})
                     self.s.Save.filename = file.filename
-            self.s.Parser.reset()
-            self.s.Parser.load(path)
+            self.s.P3.reset()
+            self.s.P3.load(path, user_id, file.filename)
+            self.s.P3.close_out()
             results.update(self.s.Save.response)
             return results

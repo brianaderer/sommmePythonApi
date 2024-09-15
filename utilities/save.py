@@ -1,6 +1,9 @@
 import singleton
 import os
 import time
+from custom_types.Wine import Wine
+from custom_types.Flight import Flight
+from custom_types.Error import Error
 import re
 
 
@@ -39,19 +42,11 @@ class Save:
             self.bevs = db.collection('beverages')
             self.flights = db.collection('flights')
 
-    def check_looped_terms(self, wine):
-        query = self.bevs
-        for field, value in wine.items():
-            if field in self.skip_terms:
-                continue
-            query = query.where(field, '==', value)
-
-        # After building the query with all necessary conditions, retrieve the documents
-        documents = query.get()
-        return documents
-
     def is_list(self, item):
         return isinstance(item, list)
+
+    def is_error(self, item):
+        return isinstance(item, Error)
 
     def get_collection(self, wine):
         return (next(iter(wine['classes'][0].values()))).lower()
@@ -191,78 +186,31 @@ class Save:
             return False
         return all(self.are_values_equal(dict1[key], dict2[key]) for key in dict1)
 
-    def save_all_wines(self, all_wines):
-        wine_flight = []
-        for wine in all_wines:
-            self.create_rich_wine(self.s.Parser.parse_wine(wine))
-        for rich_wine in self.rich_wines:
-            documents = self.check_looped_terms(rich_wine)
-            if len(documents) == 0:
-                new_doc_ref = self.bevs.document()  # Create a new document with an auto-generated ID
-                del rich_wine['sizes']
-                del rich_wine['cases']
-                new_doc_ref.set(rich_wine)  # Upload the entire dictionary as the document
-                rich_wine['value'] = list(rich_wine['full_title'][0].values())[0]
-                self.s.Cacher.set_data(key='wines:' + new_doc_ref.id, data=rich_wine, path='')
-                wine_flight.append(new_doc_ref.id)
-            else:
-                wine_flight.append(documents[0].id)
+    def check_looped_terms(self, wine: Wine):
+        bev_ref = self.bevs
+        for key in wine.keys:
+            if key in self.skip_terms:
+                continue
+            value = wine.get(key)
+            if len(value) > 0:
+                key_filter = self.s.Firebase.FieldFilter(key, '==', value)
+                docs = bev_ref.where(filter=key_filter)
+                documents = docs.stream()
+                return documents
+        return None
 
-        self.create_flight(wine_flight, 0)
-        for rich_wine in self.rich_wines:
-            self.update_terms(rich_wine)
-        try:
-            os.remove(self.path)
-            self.response.update({'deleted': True})
-        except:
-            self.response.update({'deleted': False})
-
-    def get_term(self, key, wine, owner):
-        if self.is_list(wine[key]):
-            items = wine[key]
-        else:
-            items = [wine[key]]
-        # print(items)
-        return_items = []
-        # # Get the collection reference where the documents would be
-        for item in items:
-            collection_ref = self.props.document('items').collection(key)
-            # Query to find documents where the 'value' field is the same as wine[key]
-            documents = collection_ref.where(field_path='value', op_string='==', value=item).get()
-
-            if documents:
-                # If documents are found, print and return the ID of the first document found
-                doc_id = documents[0].id
-                # print(f"Document with the same value already exists, ID: {doc_id}")
-                return_items.append({doc_id: item})
-            else:
-                print('writing item')
-                # If no documents are found, create a new one
-                new_doc_ref = collection_ref.document()  # Create a new document reference
-                write_data = {'value': item, 'owners': [owner]}
-                new_doc_ref.set(write_data)
-                self.s.Cacher.set_data(key=key + ':' + new_doc_ref.id, data=write_data, path='')
-                print("New document created with ID:", new_doc_ref.id)
-                return_items.append({new_doc_ref.id: item})
-        return return_items
-
-    def create_rich_wine(self, wine, owner='provi_upload'):
-        key_list = ''
-        self.rich_wine = {}  # Initialize rich_wine as a dictionary if not already done
-
-        for key in wine:
-            if key not in self.rich_wine:
-                self.rich_wine[key] = []  # Ensure there is a list to append to
-
-            term = self.get_term(key, wine, owner)  # Avoid using 'id' as it is a built-in function
-            self.rich_wine[key] = term
-        self.rich_wine['owners'] = [owner]
-        self.rich_wines.append(self.rich_wine.copy())  # Append a copy of the rich_wine to preserve its current state
-        self.rich_wine = {}
+    def save_all_wines(self, all_wines: Flight):
+        for wine in all_wines.wines:
+            wine: Wine
+            wine.create_rich_wine()
+            temp_id = wine.identify()
+            wine_id = temp_id if temp_id else wine.create()
+            wine.ref_id = wine_id
+        all_wines.create_flight()
 
     def create_prop(self, prop, data, uid):
         doc_ref = self.props.document('items').collection(prop).document()
         set_data = {'value': data, 'owners': [uid]}
         doc_ref.set(set_data)
-        # self.s.Cacher.set_data(key=prop + ':' + doc_ref.id, data=set_data)
+        self.s.Cacher.set_data(key=prop + ':' + doc_ref.id, data=set_data)
         return {doc_ref.id: set_data}
