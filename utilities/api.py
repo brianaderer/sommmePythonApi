@@ -123,7 +123,7 @@ class API:
             producer_dict = json.loads(producer)
             cuvees_dict = json.loads(cuvee)
             vintage_dict = json.loads(vintage)
-            return self.s.Query.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
+            return self.s.Save.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
                                             vintage=vintage_dict)
 
         @self.app.post("/api/addWine")

@@ -48,7 +48,8 @@ class P3:
                 previous_line = line  # Keep track of the previous line
         self.flight.set_title(filename)
         for section in sections:
-            wine = Wine(section, owner=self.owner)
+            wine = Wine(owner=self.owner)
+            wine.initiate_uploaded_wine(section)
             self.flight.append_wine(wine=wine, owner_id=user_id)
             self.flight.owner_id = user_id
 

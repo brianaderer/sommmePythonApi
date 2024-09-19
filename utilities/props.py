@@ -1,5 +1,6 @@
 import singleton
 from custom_types.Error import Error
+from typing import AnyStr
 
 class Props:
 
@@ -7,11 +8,11 @@ class Props:
         self.s = singleton.Singleton()
         self.props_ref = self.s.Firebase.db.collection('properties').document('items')
 
-    def get_or_create_term(self, key, values, owner, create=True):
+    def get_or_create_term(self, key, values, owner: AnyStr or None = None, create=True):
         return_data = []
         for value in values:
             results = self.s.Cacher.key_search(value, key)
-            if results[0] == 0:
+            if results[0] == 0 and create:
                 cache_object = {'value': value, 'owners': [owner]}
                 cacher_string = ''
                 coll_ref = self.props_ref.collection(key)

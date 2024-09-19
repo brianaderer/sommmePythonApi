@@ -40,8 +40,9 @@ class Wine:
         'cuvees',
     ]
 
-    def __init__(self, array, owner=None):
+    def __init__(self, owner=None):
         self.s = singleton.Singleton()
+        self.db_value = None
         self.last_stop_word = None
         self.capture_footer = False
         self.skip_item = True
@@ -61,8 +62,6 @@ class Wine:
         self.cuvees = []
         self.phone = ''
         self.email = ''
-        self.full_title = array[0]
-        self.parse_full_title()
         self.full_title = ''
         self.orphans = []
         self.notes = ''
@@ -72,6 +71,8 @@ class Wine:
         self.owner = owner
         self.owner_id = None
         self.ref_id = None
+
+    def initiate_uploaded_wine(self, array):
         index = 0
         for item in array:
             if item in list(self.stop_words.keys()):
@@ -79,7 +80,6 @@ class Wine:
             index += 1
         index = 0
         for item in array:
-            self.full_title = array[0]
             if self.capture_footer:
                 if self.skip_item:
                     self.skip_item = False
@@ -102,6 +102,8 @@ class Wine:
                     except:
                         print('couldnt get data for ' + item)
             index += 1
+        self.full_title = array[0]
+        self.parse_full_title()
 
     def iterate_forward_indices(self, array, index, forward_index=1, return_string=''):
         # Check if index + forward_index is within the bounds of the array
@@ -136,6 +138,12 @@ class Wine:
 
     def producers_handler(self, producers_string):
         self.producers.append(producers_string.strip())
+
+    def cuvees_handler(self, cuvees_string):
+        self.cuvees.append(cuvees_string.strip())
+
+    def vintages_handler(self, vintage_value):
+        self.vintages.append(str(vintage_value))
 
     def appellations_handler(self, appellations_string):
         self.appellations.append(appellations_string.strip())
@@ -195,21 +203,26 @@ class Wine:
         producer_object = self.rich_wine.get('producers')[0]
         cuvee_object = self.rich_wine.get('cuvees')[0]
         vintage_object = self.rich_wine.get('vintages')[0]
-        producer = producer_object.get_shortform_dict()
-        cuvee = cuvee_object.get_shortform_dict()
-        vintage = vintage_object.get_shortform_dict()
-        producer_filter = self.s.Firebase.FieldFilter('producer', '==', producer)
-        cuvee_filter = self.s.Firebase.FieldFilter('cuvee', '==', cuvee)
-        vintage_filter = self.s.Firebase.FieldFilter('vintage', '==', vintage)
-        coll_ref = self.s.Firebase.db.collection('beverages')
-        docs = (coll_ref
-                .where(filter=producer_filter)
-                .where(filter=cuvee_filter)
-                .where(filter=vintage_filter)
-                .stream()
-                )
-        first_doc = next(docs, None)
-        return first_doc.id if first_doc is not None else False
+        if not self.s.Save.is_error(cuvee_object) and not self.s.Save.is_error(cuvee_object) and not self.s.Save.is_error(vintage_object):
+            producer = producer_object.get_shortform_dict()
+            cuvee = cuvee_object.get_shortform_dict()
+            vintage = vintage_object.get_shortform_dict()
+            producer_filter = self.s.Firebase.FieldFilter('producer', '==', producer)
+            cuvee_filter = self.s.Firebase.FieldFilter('cuvee', '==', cuvee)
+            vintage_filter = self.s.Firebase.FieldFilter('vintage', '==', vintage)
+            coll_ref = self.s.Firebase.db.collection('beverages')
+            docs = (coll_ref
+                    .where(filter=producer_filter)
+                    .where(filter=cuvee_filter)
+                    .where(filter=vintage_filter)
+                    .stream()
+                    )
+            first_doc = next(docs, None)
+            if first_doc is not None:
+                self.db_value = first_doc.to_dict()
+            return first_doc.id if first_doc is not None else False
+        else:
+            return False
 
     def create(self):
         dict_object = self.create_dict()
