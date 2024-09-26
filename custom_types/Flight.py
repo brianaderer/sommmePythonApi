@@ -10,10 +10,14 @@ import time
 class Flight:
     phone_pattern = r"(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})"
     email_pattern = r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
+    lookups = {
+        'current_version': 'currentVersion'
+    }
+    appends = ['wine_ids', 'versions']
 
     def __init__(self, owner=None):
-        self.title = None
         self.s = singleton.Singleton()
+        self.title = None
         self.sales_rep: AnyStr | None = None
         self.rep_title: AnyStr | None = None
         self.rep_phone: AnyStr | None | Error = None
@@ -24,10 +28,37 @@ class Flight:
         self.owner = owner
         self.ref_id = None
         self.owner_id = None
+        self.wine_ids = []
+        self.versions: dict = {}
+        self.current_version = 1
 
     def append_wine(self, wine: Wine, owner_id: AnyStr):
         wine.owner_id = owner_id
         self.wines.append(wine)
+
+    def add_wine_and_increment_version(self, wine_id: AnyStr):
+        self.wine_ids.append(wine_id)
+        self.current_version += 1
+        self.make_wine_id_list()
+        self.versions[str(self.current_version)] = (self.get_list_indices(self.wine_ids))
+
+    def make_wine_id_list(self):
+        wine_ids = []
+        for wine in self.wines:
+            if wine.ref_id is not None:
+                wine_ids.append(wine.ref_id)
+        self.wine_ids = wine_ids
+
+    def list_indices(self, input_list):
+        return list(range(len(input_list)))
+
+    def update(self):
+        self.make_wine_id_list()
+        update_dict = {'wines': [], 'versions': self['versions'], 'currentVersion': int(self.current_version)}
+        update_dict['versions'][str(self.current_version)] = self.list_indices(self.wine_ids)
+        update_dict['wines'] = self.wine_ids
+        doc_ref = self.s.Firebase.db.collection('flights').document(self.ref_id)
+        doc_ref.update(update_dict)
 
     def filter_array(self, array):
         # List of terms to exclude
@@ -36,6 +67,9 @@ class Flight:
         # Filter out any terms that are in the exclude_terms list
         filtered_array = [item for item in array if item not in exclude_terms]
         return filtered_array
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
     def pre_flight(self):
         index = 0
@@ -100,19 +134,17 @@ class Flight:
 
     def create_flight(self):
         flight_dict = {}
-        wine_ids = []
-        for wine in self.wines:
-            if wine.ref_id is not None:
-                wine_ids.append(wine.ref_id)
-        flight_dict['wines'] = wine_ids
-        flight_dict['versions'] = {'1': self.get_list_indices(wine_ids)}
+        self.make_wine_id_list()
+        flight_dict['wines'] = self.wine_ids
+        flight_dict['versions'] = {'1': self.get_list_indices(self.wine_ids)}
         flight_dict['currentVersion'] = 1
         flight_dict['owner'] = self.owner_id
         flight_dict['name'] = self.title
         flight_dict['distributorName'] = self.distributor
-        flight_dict['rep_contact'] = {'phone': self.rep_phone, 'email': self.rep_email, 'title': self.rep_title, 'name': self.sales_rep}
+        flight_dict['rep_contact'] = {'phone': self.rep_phone, 'email': self.rep_email, 'title': self.rep_title,
+                                      'name': self.sales_rep}
         flight_dict['timestamp'] = time.time()
         doc_ref = self.s.Firebase.db.collection('flights').document()
         self.ref_id = doc_ref.id
         doc_ref.set(flight_dict)
-
+        return doc_ref.id

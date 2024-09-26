@@ -7,8 +7,8 @@ class Dependencies:
     }
 
     correlations = {
-        'producers': ['cuvees'],
-        'cuvees': ['appellations', 'colors'],
+        'producer': ['cuvee'],
+        'cuvee': ['appellations', 'colors'],
         'appellations': ['regions', 'countries'],
         'regions': ['countries'],
         'skus': ['sizes', 'cases'],

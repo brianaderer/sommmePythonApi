@@ -10,9 +10,9 @@ class Wine:
     prev_words = {
     }
     identity_keys = [
-        'producers',
-        'cuvees',
-        'vintages'
+        'producer',
+        'cuvee',
+        'vintage'
     ]
     stop_words = {
         'Type': 'types',
@@ -29,15 +29,15 @@ class Wine:
         'classes',
         'types',
         'colors',
-        'producers',
+        'producer',
         'regions',
         'grapes',
         'appellations',
         'sizes',
         'skus',
         'countries',
-        'vintages',
-        'cuvees',
+        'vintage',
+        'cuvee',
     ]
 
     def __init__(self, owner=None):
@@ -50,7 +50,7 @@ class Wine:
         self.classes = []
         self.types = []
         self.colors = []
-        self.producers = []
+        self.producer = []
         self.regions = []
         self.grapes = []
         self.appellations = []
@@ -58,8 +58,8 @@ class Wine:
         self.skus = []
         self.countries = []
         self.distributors = []
-        self.vintages = []
-        self.cuvees = []
+        self.vintage = []
+        self.cuvee = []
         self.phone = ''
         self.email = ''
         self.full_title = ''
@@ -105,6 +105,13 @@ class Wine:
         self.full_title = array[0]
         self.parse_full_title()
 
+    def parse_wine_dict(self, wine_dict):
+
+        for key in wine_dict:
+            for value in wine_dict[key]:
+                val = value[list(value.keys())[0]]
+                self[key].append(val['value'])
+
     def iterate_forward_indices(self, array, index, forward_index=1, return_string=''):
         # Check if index + forward_index is within the bounds of the array
         if (index + forward_index) < len(array):
@@ -116,6 +123,9 @@ class Wine:
         else:
             # If out of bounds, return the accumulated string
             return return_string
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
     def get(self, key):
         return getattr(self, key, None)
@@ -137,13 +147,13 @@ class Wine:
             self.countries.append(regions_array[1])
 
     def producers_handler(self, producers_string):
-        self.producers.append(producers_string.strip())
+        self.producer.append(producers_string.strip())
 
     def cuvees_handler(self, cuvees_string):
-        self.cuvees.append(cuvees_string.strip())
+        self.cuvee.append(cuvees_string.strip())
 
     def vintages_handler(self, vintage_value):
-        self.vintages.append(str(vintage_value))
+        self.vintage.append(str(vintage_value))
 
     def appellations_handler(self, appellations_string):
         self.appellations.append(appellations_string.strip())
@@ -159,8 +169,8 @@ class Wine:
 
     def parse_full_title(self):
         titular_array = self.split_title(self.full_title)
-        self.cuvees.append(titular_array[1])
-        self.vintages.append(titular_array[2])
+        self.cuvee.append(titular_array[1])
+        self.vintage.append(titular_array[2])
 
     def split_title(self, title):
         matches = re.findall(self.s.P3.title_pattern, title)
@@ -180,9 +190,12 @@ class Wine:
     def create_dict(self):
         try:
             dict_object = {'owners': [self.owner_id, self.owner]}
-            producer_dict: LongformItem = self.rich_wine.get('producers')[0].get_id_dict()
-            cuvee_dict: LongformItem = self.rich_wine.get('cuvees')[0].get_id_dict()
-            vintage_dict: LongformItem = self.rich_wine.get('vintages')[0].get_id_dict()
+            producer: LongformItem = self.rich_wine.get('producer')[0]
+            producer_dict: LongformItem | Error = producer.get_id_dict()
+            cuvee: LongformItem = self.rich_wine.get('cuvee')[0]
+            vintage: LongformItem = self.rich_wine.get('vintage')[0]
+            cuvee_dict = cuvee.get_id_dict()
+            vintage_dict = vintage.get_id_dict()
             dict_object['producer'] = producer_dict
             dict_object['cuvee'] = cuvee_dict
             dict_object['vintage'] = vintage_dict
@@ -200,10 +213,11 @@ class Wine:
             return Error(e.__str__())
 
     def identify(self) -> AnyStr | False:
-        producer_object = self.rich_wine.get('producers')[0]
-        cuvee_object = self.rich_wine.get('cuvees')[0]
-        vintage_object = self.rich_wine.get('vintages')[0]
-        if not self.s.Save.is_error(cuvee_object) and not self.s.Save.is_error(cuvee_object) and not self.s.Save.is_error(vintage_object):
+        producer_object: LongformItem = self.rich_wine.get('producer')[0]
+        cuvee_object: LongformItem = self.rich_wine.get('cuvee')[0]
+        vintage_object: LongformItem = self.rich_wine.get('vintage')[0]
+        if not self.s.Save.is_error(cuvee_object) and not self.s.Save.is_error(
+                cuvee_object) and not self.s.Save.is_error(vintage_object):
             producer = producer_object.get_shortform_dict()
             cuvee = cuvee_object.get_shortform_dict()
             vintage = vintage_object.get_shortform_dict()
@@ -236,7 +250,7 @@ class Wine:
             return None
 
     def create_notes(self, beverage_id):
-        doc_ref = self.s.Firebase.db.collection('notes').document()
-        data = {'value': self.notes, 'owner': self.owner_id, 'beverageId': beverage_id}
         if len(self.notes):
+            doc_ref = self.s.Firebase.db.collection('notes').document()
+            data = {'value': self.notes, 'owner': self.owner_id, 'beverageId': beverage_id}
             doc_ref.set(data)

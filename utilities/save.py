@@ -15,9 +15,10 @@ class Save:
     props = None
     path = None
     owner_id = 0
+    ban_keys = ['producer', 'cuvee', 'vintage']
     correlations = {
-        'producers': ['cuvees'],
-        'cuvees': ['appellations', 'colors'],
+        'producer': ['cuvee'],
+        'cuvee': ['appellations', 'colors'],
         'appellations': ['regions', 'countries'],
         'regions': ['countries'],
         'skus': ['sizes', 'cases'],
@@ -208,135 +209,84 @@ class Save:
         value['owners'] = None
         return key, value
 
+    def get_vintage_by_val(self, vintage):
+        coll_ref = self.s.Firebase.db.collection('properties').document('items').collection('vintage')
+
+        val = vintage[1]['value']
+        res = self.s.Cacher.key_search(str(val), 'vintage')
+        data = self.s.Query.parse_redis_search_results(res)
+        if data[0] < 1:
+            vintage_filter = self.s.Firebase.FieldFilter('value', '==', str(val))
+            docs = (coll_ref
+                    .where(filter=vintage_filter)
+                    .stream()
+                    )
+            for doc in docs:
+                return {doc.id: doc.to_dict()}
+        else:
+            return data[1]
+        write_data = vintage[1].copy()
+        write_data['owners'] = 1
+        write_data['value'] = str(val)
+        doc_ref = coll_ref.document()
+        doc_ref.set(write_data)
+        self.s.Cacher.set_data(key='vintage:' + str(doc_ref.id), data=write_data)
+        return {doc_ref.id: write_data}
+
     def assemble_wine_data(self, producer, filter_cuvee, vintage):
         self.reset()
-        wine = Wine()
         producer_object = LongformItem(self.dict_to_tuple(producer))
         cuvee_object = LongformItem(self.dict_to_tuple(filter_cuvee))
-        wine.producers_handler(producer_object.get_value())
-        wine.cuvees_handler(cuvee_object.get_value())
-        # wine.vintages_handler(vintage_object.get_value())
-        wine.create_rich_wine()
-        identity = wine.identify()
-        return_dict = {'producer': [], 'cuvee': [], 'vintage': [], 'countries': [], 'classes': [], 'grapes': []}
-        if identity:
-            print(wine.db_value)
-            return wine.db_value
-        elif producer_object.key != 0:
-            return_dict['producer'].append(producer_object.get_shortform_dict())
-            print('getting producer')
-        # elif vintage_object.key != 0:
-        #     return_dict['vintage'].append(vintage_object.get_shortform_dict())
-        print(return_dict)
-        # created_cuvee_object = self.create_cuvee_object(cuvee=filter_cuvee)
-        # cuvee_key = self.get_key(created_cuvee_object)
-        # producer_dict, parsed_cuvee, parsed_vintage = self.parse_incoming_suggestions(producer=producer,
-        #                                                                               cuvee=filter_cuvee,
-        #                                                                               vintage=vintage)
-        # parsed_producer = producer_dict[self.get_key(producer_dict)]
-        # if parsed_producer is None:
-        #     possible_producers = self.return_coll('producers')
-        # else:
-        #     string = parsed_producer['value']
-        #     possible_producers = self.get_producers(filter_value=string, with_keys=True)
-        # for producer in possible_producers:
-        #     key = self.get_key(producer)
-        #     data = producer[key]
-        #     self.add_to_suggestions(coll='producers', data=data, key=key)
-        #     filter_text = '' if parsed_cuvee is None else parsed_cuvee['value']
-        #     producer_val = producer[key]
-        #     self.filter_cuvees(cuvees=producer_val['cuvees'], filter_text=unidecode(filter_text))
-        # if len(possible_producers) == 1:
-        #     producer_cuvees = possible_producers[0][self.get_key(possible_producers[0])]['cuvees']
-        #     self.filtered_cuvees = [cuvee for cuvee in producer_cuvees if self.get_key(cuvee) == cuvee_key]
-        # action_cuvees = self.filtered_cuvees if len(self.filtered_cuvees) else self.all_cuvees
-        # if len(action_cuvees) == 1:
-        #     # if False:
-        #     cuvee = action_cuvees[0]
-        #     found_wine = self.check_wine(cuvee=cuvee)
-        #     print(found_wine)
-        #     wine = self.filter_keys(found_wine[0])
-        #     modified_wine = self.expand_wine(wine)
-        #     self.suggestions = modified_wine
-        #
-        # else:
-        #     for cuvee in action_cuvees:
-        #         key = self.get_key(cuvee)
-        #         returned_cuvee = self.cache_key_handler(key=key, collection='cuvees')
-        #         self.add_to_suggestions(coll='cuvees', data=returned_cuvee, key=key)
-        #         if 'appellations' in returned_cuvee.keys():
-        #             for appellation in returned_cuvee['appellations']:
-        #
-        #                 key = self.get_key(appellation)
-        #                 returned_appellation = self.cache_key_handler(key=key, collection='appellations')
-        #                 self.add_to_suggestions(coll='appellations', data=returned_appellation, key=key)
-        #                 if 'regions' in returned_appellation:
-        #                     regions = (returned_appellation['regions'])
-        #                     for region in regions:
-        #
-        #                         key = self.get_key(region)
-        #                         returned_region = self.cache_key_handler(key=key, collection='regions')
-        #                         self.add_to_suggestions(coll='regions', data=returned_region, key=key)
-        #                         if 'countries' in returned_region:
-        #                             countries = returned_region['countries']
-        #                             for country in countries:
-        #                                 key = self.get_key(country)
-        #                                 returned_country = self.cache_key_handler(key=key,
-        #                                                                           collection='countries')
-        #                                 self.add_to_suggestions(coll='countries', data=returned_country, key=key,
-        #                                                         )
-        #         if 'colors' in returned_cuvee.keys():
-        #             for color in returned_cuvee['colors']:
-        #
-        #                 key = self.get_key(color)
-        #                 returned_color = self.cache_key_handler(key=key, collection='colors')
-        #                 self.add_to_suggestions(coll='colors', data=returned_color, key=key)
-        #                 if 'types' in returned_color:
-        #                     types = returned_color['types']
-        #                     for local_type in types:
-        #
-        #                         key = self.get_key(local_type)
-        #                         returned_type = self.cache_key_handler(key=key, collection='types')
-        #                         self.add_to_suggestions(coll='types', data=returned_type, key=key)
-        #                         if 'classes' in returned_type:
-        #                             classes = returned_type['classes']
-        #                             for class_object in classes:
-        #                                 key = self.get_key(class_object)
-        #                                 returned_class = self.cache_key_handler(key=key, collection='classes')
-        #                                 self.add_to_suggestions(coll='classes', data=returned_class, key=key)
-        #
-        # insert_cuvee = True
-        #
-        # for cuvee in self.suggestions['cuvees']:
-        #     if self.get_key(cuvee) == self.get_key(created_cuvee_object):
-        #         insert_cuvee = False
-        #         break
-        #
-        # if insert_cuvee:
-        #     self.suggestions['cuvees'].insert(0, created_cuvee_object)
-        #
-        # insert_producer = True
-        #
-        # for producer in self.suggestions['producers']:
-        #     val = producer[self.get_key(producer)]['value']
-        #     if val == producer_dict[self.get_key(producer_dict)]['value']:
-        #         insert_producer = False
-        #         break
-        #
-        # if insert_producer:
-        #     self.suggestions['producers'].insert(0, producer_dict)
-        #
-        # for key in list(self.suggestions.keys()):
-        #     if key not in self.excluded_indices and (not self.suggestions[key] or not len(self.suggestions[key])):
-        #         data = self.s.Cacher.key_search(value='', key=key, limit=False)
-        #
-        #         parsed_data = self.parse_redis_search_value(data)
-        #         self.suggestions[key] = parsed_data
-        #
-        # parsed_vintage = self.get_vintage(vintage=vintage)
-        # self.suggestions['found_wine'] = self.found_wine
-        # self.suggestions['vintage'] = parsed_vintage
-        # return self.suggestions
+        vintage_inter = self.get_vintage_by_val(self.dict_to_tuple(vintage))
+        vintage_object = LongformItem(self.dict_to_tuple(vintage_inter))
+        # wine.producers_handler(producer_object.get_value())
+        # wine.cuvees_handler(cuvee_object.get_value())
+        # wine.create_rich_wine()
+        return_dict = {'producer': [], 'cuvee': [], 'vintage': [], 'countries': [], 'classes': [], 'grapes': [], 'regions': [], 'types': [], 'appellations': [], 'colors': []}
+        return_dict = self.get_values_from_return_dict(producer=producer_object, cuvee=cuvee_object, vintage=vintage_object,
+                                                       return_dict=return_dict)
+        return return_dict
+
+    def get_values_from_return_dict(self, cuvee: LongformItem, producer: LongformItem, vintage: LongformItem, return_dict):
+        # Initialize filters as None
+        cuvee_filter = None
+        producer_filter = None
+        return_dict['vintage'].append(vintage.get_value_dict())
+
+        if producer.key != 0:
+            return_dict['producer'].append(producer.get_value_dict())
+            producer_filter = self.s.Firebase.FieldFilter('producer', '==', producer.get_shortform_dict())
+
+        if cuvee.key != 0:
+            return_dict['cuvee'].append(cuvee.get_value_dict())
+            cuvee_filter = self.s.Firebase.FieldFilter('cuvee', '==', cuvee.get_shortform_dict())
+
+        col_ref = self.s.Firebase.db.collection('beverages')
+
+        # Apply filters conditionally
+        query = col_ref
+        if cuvee_filter:
+            query = query.where(filter=cuvee_filter)
+        if producer_filter:
+            query = query.where(filter=producer_filter)
+
+        # Execute query and process the documents
+        docs = query.stream()
+        for doc in docs:
+            return_dict = self.parse_wine_terms(doc.to_dict(), return_dict)
+        return_dict['foundWine'] = producer.key and producer.key != 0 and cuvee.key and cuvee.key != 0
+        return return_dict
+
+    def parse_wine_terms(self, wine_dict, return_dict):
+        for key in wine_dict:
+            if key in return_dict:
+                if key not in self.ban_keys:
+                    for value in wine_dict[key]:
+                        value_object = ShortformItem(value)
+                        if value_object.return_value_dict() not in return_dict[key]:
+                            return_dict[key].append(value_object.return_value_dict())
+
+        return return_dict
 
     def save_all_wines(self, all_wines: Flight):
         for wine in all_wines.wines:
@@ -346,6 +296,7 @@ class Save:
             wine_id = temp_id if temp_id else wine.create()
             wine.ref_id = wine_id
         all_wines.create_flight()
+
 
     def create_prop(self, prop, data, uid):
         doc_ref = self.props.document('items').collection(prop).document()

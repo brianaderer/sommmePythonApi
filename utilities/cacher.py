@@ -7,9 +7,9 @@ import re
 
 class Cacher:
     PRODUCER_LOCK = 'producer_lock'
-    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'vintage', 'grapes',
-                           'cuvees', 'sizes', 'skus', 'vintages']
-
+    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'grapes', 'sizes', 'skus']
+    ban_words = ['a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 'into', 'is', 'it', 'no', 'not', 'of', 'on', 'or', 'such', 'that', 'the', 'their', 'then', 'there', 'these', 'they', 'this', 'to', 'was', 'will', 'with'
+]
     def __init__(self):
         self.s = singleton.Singleton()
         self.r = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -101,11 +101,11 @@ class Cacher:
             # Release the lock
             self.lock_or_unlock(False)
 
-    def key_search(self, value, key='producers', limit=True, num_results=10000):
+    def key_search(self, value, key='producer', limit=True, num_results=10000):
         # Break the value into words using regex to split by spaces and punctuation
         words = re.findall(r'\w+', value)
         # Construct the search query to match all words, excluding single-letter words
-        search_terms = ' '.join([f'@search:*{self.search_prep(word)}*' for word in words if len(word) > 1])
+        search_terms = ' '.join([f'(@search:*{self.search_prep(word)}* | @search:{self.search_prep(word)})' for word in words if len(word) > 1 and self.search_prep(word) not in self.ban_words])
         search_command = ['FT.SEARCH', f'{key}_idx', search_terms, 'LIMIT', '0', str(num_results)]
         results = self.r.execute_command(*search_command)
         modified_results = []
@@ -133,12 +133,32 @@ class Cacher:
     def create_producer_index(self):
         try:
             index_creation_command = (
-                'FT.CREATE', 'producers_idx', 'ON', 'JSON', 'PREFIX', '1', 'producers:', 'SCHEMA', '$.search_text',
+                'FT.CREATE', 'producer_idx', 'ON', 'JSON', 'PREFIX', '1', 'producer:', 'SCHEMA', '$.search_text',
                 'AS',
                 'search', 'TEXT'
             )
             self.r.execute_command(*index_creation_command)
-            print("Index 'producers_idx' created successfully.")
+            print("Index 'producer_idx' created successfully.")
+        except redis.exceptions.ResponseError as e:
+            print(e)
+        try:
+            index_creation_command = (
+                'FT.CREATE', 'cuvee_idx', 'ON', 'JSON', 'PREFIX', '1', 'cuvee:', 'SCHEMA', '$.search_text',
+                'AS',
+                'search', 'TEXT'
+            )
+            self.r.execute_command(*index_creation_command)
+            print("Index 'cuvee_idx' created successfully.")
+        except redis.exceptions.ResponseError as e:
+            print(e)
+        try:
+            index_creation_command = (
+                'FT.CREATE', 'vintage_idx', 'ON', 'JSON', 'PREFIX', '1', 'vintage:', 'SCHEMA', '$.search_text',
+                'AS',
+                'search', 'TEXT'
+            )
+            self.r.execute_command(*index_creation_command)
+            print("Index 'vintage_idx' created successfully.")
         except redis.exceptions.ResponseError as e:
             print(e)
 

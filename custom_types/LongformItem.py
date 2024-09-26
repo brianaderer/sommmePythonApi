@@ -40,6 +40,7 @@ class LongformItem:
 
     def get_id_dict(self):
         return {self.key: self.get_value()}
+
     def check_dep(self, key, value: ShortformItem):
         return (key in self.data and
                 value.is_equal(self.data[key]))
@@ -54,6 +55,9 @@ class LongformItem:
 
     def get_shortform_dict(self):
         return {self.key: self.get_value()}
+
+    def get_value_dict(self):
+        return {self.key: {'value': self.get_value(), 'search_text': self.search_text}}
 
     def __setitem__(self, key, value):
         self.__dict__[key] = value

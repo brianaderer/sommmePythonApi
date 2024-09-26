@@ -127,7 +127,7 @@ class CleanseWine:
     def parse_query_result(self):
         print('found data')
         for doc in self.result:
-            print(f"ID: {doc.ref_id}")
+            print(f"ID: {doc.id}")
 
     def execute_query(self):
         docs = (self.bev_ref
@@ -136,4 +136,4 @@ class CleanseWine:
                 .where(filter=self.vintageFilter)
                 .stream())
         for doc in docs:
-            self.returned_docs.append({doc.ref_id: doc.to_dict()})
+            self.returned_docs.append({doc.id: doc.to_dict()})

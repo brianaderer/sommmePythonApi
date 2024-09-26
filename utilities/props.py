@@ -2,6 +2,7 @@ import singleton
 from custom_types.Error import Error
 from typing import AnyStr
 
+
 class Props:
 
     def __init__(self):
@@ -12,15 +13,18 @@ class Props:
         return_data = []
         for value in values:
             results = self.s.Cacher.key_search(value, key)
+            # if key == 'cuvee':
+            #     print({key: value})
+            #     print(results)
             if results[0] == 0 and create:
                 cache_object = {'value': value, 'owners': [owner]}
                 cacher_string = ''
                 coll_ref = self.props_ref.collection(key)
-                key_filter = self.s.Firebase.FieldFilter('value', 'array_contains', value)
+                key_filter = self.s.Firebase.FieldFilter('value', '==', value)
                 result = coll_ref.where(filter=key_filter)
                 docs = result.stream()
                 for doc in docs:
-                    doc_id = doc.ref_id
+                    doc_id = doc.id
                     doc_dict = doc.to_dict()
                     doc_dict['search_text'] = self.s.Cacher.search_prep(value)
                     cacher_string = key + ':' + doc_id

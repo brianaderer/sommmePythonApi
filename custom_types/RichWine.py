@@ -57,28 +57,28 @@ class RichWine:
         return self.__dict__.get(item)
 
     def recurse_terms(self):
-        pass
         for key in self.s.Dependencies.correlations:
             data = self.get(key)
-            for datum in data:
-                if not isinstance(datum, Error):
-                    cache_string = key + ':' + datum.key
-                    correlations = self.s.Dependencies.correlations[key]
-                    for corr in correlations:
-                        results = self.s.Cacher.get_data(cache_string)
-                        term_object = LongformItem((datum.key, results[0]))
-                        if not isinstance(term_object, Error):
-                            corr_results = self.get(corr)
-                            if corr_results is not None and not isinstance(corr_results, Error):
-                                for result in corr_results:
-                                    append = False
-                                    write_data = term_object.data.copy()
-                                    if corr not in write_data:
-                                        write_data[corr] = []
-                                    if not isinstance(result, Error) and result is not None:
-                                        data_object = {result.key: result.get_value()}
-                                        if data_object not in write_data[corr]:
-                                            append = True
-                                            write_data[corr].append(data_object)
-                                    if append:
-                                        self.s.Props.update_term(coll=key, key=datum.key, data=write_data)
+            if data:
+                for datum in data:
+                    if not isinstance(datum, Error):
+                        cache_string = key + ':' + datum.key
+                        correlations = self.s.Dependencies.correlations[key]
+                        for corr in correlations:
+                            results = self.s.Cacher.get_data(cache_string)
+                            term_object = LongformItem((datum.key, results[0]))
+                            if not isinstance(term_object, Error):
+                                corr_results = self.get(corr)
+                                if corr_results is not None and not isinstance(corr_results, Error):
+                                    for result in corr_results:
+                                        append = False
+                                        write_data = term_object.data.copy()
+                                        if corr not in write_data:
+                                            write_data[corr] = []
+                                        if not isinstance(result, Error) and result is not None:
+                                            data_object = {result.key: result.get_value()}
+                                            if data_object not in write_data[corr]:
+                                                append = True
+                                                write_data[corr].append(data_object)
+                                        if append:
+                                            self.s.Props.update_term(coll=key, key=datum.key, data=write_data)

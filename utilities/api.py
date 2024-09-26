@@ -12,7 +12,8 @@ from utilities.parser import Parser
 from utilities.recommender import Recommender
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
-from utilities.flight import Flight
+from custom_types.Flight import Flight
+
 
 class Item(BaseModel):
     name: str
@@ -75,6 +76,7 @@ class API:
         ):
             user = User()
             return user.search_for_user(data=data)
+
         @self.app.post("/api/groupShare/")
         async def update_user(
                 data: str = Form(...),
@@ -83,6 +85,7 @@ class API:
                 key: str = Form(...),
         ):
             return self.s.Shares.handle_group_share(data=data, group_id=groupId, owner_id=ownerId, key=key)
+
         @self.app.post("/api/groupRequest/")
         async def update_user(
                 data: str = Form(...),
@@ -105,7 +108,14 @@ class API:
                 name: str = Form(...),
         ):
             flight = Flight()
-            return flight.handle_create_wine(owner=owner.replace('"', ''), name=name.replace('"', ''))
+            flight.owner_id = json.loads(owner)
+            flight.title = json.loads(name)
+            flight.current_version = 1
+            flight.versions = {'1': []}
+            if flight.title and len(flight.title) > 0:
+                return {'id': flight.create_flight()}
+            else:
+                return "Can't create a nameless flight"
 
         @self.app.post("/api/dlSim/")
         async def get_sim(
@@ -121,10 +131,10 @@ class API:
                 vintage: str = Form(...),
         ):
             producer_dict = json.loads(producer)
-            cuvees_dict = json.loads(cuvee)
+            cuvee_dict = json.loads(cuvee)
             vintage_dict = json.loads(vintage)
-            return self.s.Save.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvees_dict,
-                                            vintage=vintage_dict)
+            return self.s.Save.assemble_wine_data(producer=producer_dict, filter_cuvee=cuvee_dict,
+                                                  vintage=vintage_dict)
 
         @self.app.post("/api/addWine")
         async def add_wine(producer: Annotated[str, Form()], cuvee: Annotated[str, Form()],
