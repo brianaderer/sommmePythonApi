@@ -252,5 +252,5 @@ class Wine:
     def create_notes(self, beverage_id):
         if len(self.notes):
             doc_ref = self.s.Firebase.db.collection('notes').document()
-            data = {'value': self.notes, 'owner': self.owner_id, 'beverageId': beverage_id}
+            data = {'value': self.notes, 'owner': self.owner_id, 'wineId': beverage_id}
             doc_ref.set(data)
