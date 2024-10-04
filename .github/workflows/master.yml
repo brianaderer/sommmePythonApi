@@ -25,7 +25,7 @@ jobs:
           remote_path: ~/files/prod1
           remote_host: 18.117.10.19
           remote_port: 22
-          remote_user: sshuser
+          remote_user: bevnotessh
           remote_key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Install dependencies and activate venv
