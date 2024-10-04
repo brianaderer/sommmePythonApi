@@ -23,7 +23,7 @@ jobs:
           switches: -avzr --delete --exclude='/private/' --exclude='/tmp/'
           path: /
           remote_path: ~/files/prod1
-          remote_host: 2.3.15.144.253
+          remote_host: 3.15.144.253
           remote_port: 22
           remote_user: bevnotessh
           remote_key: ${{ secrets.SSH_DEPLOY_KEY }}
@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies and activate venv
         uses: appleboy/ssh-action@master
         with:
-          host: 2.3.15.144.253
+          host: 3.15.144.253
           username: bevnotessh
           key: ${{ secrets.SSH_DEPLOY_KEY }}
           port: 22
