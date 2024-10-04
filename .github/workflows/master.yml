@@ -22,7 +22,7 @@ jobs:
         with:
           switches: -avzr --delete --exclude='/private/' --exclude='/tmp/'
           path: /
-          remote_path: ~/files/
+          remote_path: ~/files/prod1
           remote_host: 18.117.10.19
           remote_port: 22
           remote_user: sshuser
@@ -32,11 +32,11 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: 18.117.10.19
-          username: sshuser
+          username: bevnotessh
           key: ${{ secrets.SSH_DEPLOY_KEY }}
           port: 22
           script: |
-            cd ~/files/
+            cd ~/files/prod1
             virtualenv env
             source env/bin/activate
             pip install --upgrade pip
