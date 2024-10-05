@@ -47,3 +47,15 @@ jobs:
             pip install --upgrade pip
             pip install -r requirements.txt
             python main.py update_caches
+
+      - name: Log in as sudo and restart server
+        uses: appleboy/ssh-action@master
+        with:
+          host: 3.15.144.253
+          username: bevnotesudo
+          key: ${{ secrets.SSH_DEPLOY_KEY }}
+          port: 22
+          script: |
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart nginx
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart gunicorn
+            
