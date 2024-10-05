@@ -38,7 +38,9 @@ jobs:
           script: |
             cd ~/files/prod1
             ln -s ~/files/resources/prod/static ~/files/prod/static
-            ln -s ~/files/resources/prod/private ~/files/prod/private
+            mkdir private
+            ln -s ~/files/resources/prod/private/serviceAccountKey.json ~/files/prod/private/serviceAccountKey.json
+            ln -s ~/files/resources/prod/.env ~/files/prod/.env
             virtualenv env
             source env/bin/activate
             pip install --upgrade pip
