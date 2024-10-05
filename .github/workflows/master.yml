@@ -37,6 +37,9 @@ jobs:
           port: 22
           script: |
             cd ~/files/prod1
+            mkdir private
+            ln -s ~/files/resources/prod/static ~/files/prod/static
+            ln -s ~/files/resources/prod/private ~/files/prod/private
             virtualenv env
             source env/bin/activate
             pip install --upgrade pip
