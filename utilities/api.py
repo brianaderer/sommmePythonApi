@@ -13,7 +13,7 @@ from utilities.recommender import Recommender
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
 from custom_types.Flight import Flight
-
+from pathlib import Path as PathlibPath  # Avoid conflict with FastAPI's Path
 
 class Item(BaseModel):
     name: str
@@ -143,7 +143,7 @@ class API:
 
         @self.app.post("/api/uploadfile/{user_id}")
         async def create_upload_file(
-                user_id: Annotated[str, Path(title="The ID of the item to get")],
+                user_id: Annotated[str, Path(title="The ID of the item to get")],  # FastAPI's Path
                 file: UploadFile | None = None,
                 q: str | None = None,
                 item: Item | None = None,
@@ -151,11 +151,10 @@ class API:
             # Write to file
             contents = await file.read()
 
-            # initiating the "s" object to use the
-            # sha3_224 algorithm from the hashlib module.
+            # Initiating the "s" object to use the sha3_224 algorithm from the hashlib module.
             s = hashlib.sha3_224()
             string = (user_id + str(time.time())).encode()
-            # providing the input to the hashing algorithm.
+            # Providing the input to the hashing algorithm.
             s.update(string)
 
             filename = (s.hexdigest())
@@ -165,16 +164,25 @@ class API:
                 results.update({"q": q})
             if item:
                 results.update({"item": item})
-            path = 'tmp/' + filename + '.pdf'
+
+            # Use PathlibPath to create the directory and file path
+            tmp_dir = PathlibPath("tmp")
+            tmp_dir.mkdir(parents=True, exist_ok=True)  # Ensure 'tmp' directory exists
+
+            # Build the file path in a cross-platform way
+            path = tmp_dir / f"{filename}.pdf"
             self.s.Save.owner_id = user_id
-            self.s.Save.path = path
+            self.s.Save.path = str(path)  # Convert Path object to string if needed
+
             if file:
-                with open('tmp/' + filename + '.pdf', 'wb') as f:
+                # Write the file
+                with open(path, 'wb') as f:
                     f.write(contents)
                     results.update({"filename": file.filename})
                     self.s.Save.filename = file.filename
+
             self.s.P3.reset()
-            self.s.P3.load(path, user_id, file.filename)
+            self.s.P3.load(str(path), user_id, file.filename)  # Ensure path is a string for P3.load
             self.s.P3.close_out()
             results.update(self.s.Save.response)
             return results
