@@ -41,6 +41,7 @@ jobs:
             mkdir private
             ln -s ~/files/resources/prod/private/serviceAccountKey.json ~/files/prod/private/serviceAccountKey.json
             ln -s ~/files/resources/prod/.env ~/files/prod/.env
+            rm -r env
             virtualenv env
             source env/bin/activate
             pip install --upgrade pip
