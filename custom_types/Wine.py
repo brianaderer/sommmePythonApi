@@ -212,7 +212,7 @@ class Wine:
         except Exception as e:
             return Error(e.__str__())
 
-    def identify(self) -> AnyStr | False:
+    def identify(self) -> AnyStr | bool:
         producer_object: LongformItem = self.rich_wine.get('producer')[0]
         cuvee_object: LongformItem = self.rich_wine.get('cuvee')[0]
         vintage_object: LongformItem = self.rich_wine.get('vintage')[0]
