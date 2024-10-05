@@ -4,3 +4,4 @@ tmp
 tmp/*
 venv
 utilities/__pycache__/
+.env

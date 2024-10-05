@@ -3,16 +3,25 @@ import redis
 import time
 from unidecode import unidecode
 import re
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 class Cacher:
     PRODUCER_LOCK = 'producer_lock'
-    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'grapes', 'sizes', 'skus']
-    ban_words = ['a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 'into', 'is', 'it', 'no', 'not', 'of', 'on', 'or', 'such', 'that', 'the', 'their', 'then', 'there', 'these', 'they', 'this', 'to', 'was', 'will', 'with'
-]
+    indexed_collections = ['regions', 'colors', 'appellations', 'types', 'classes', 'countries', 'grapes', 'sizes',
+                           'skus']
+    ban_words = ['a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 'into', 'is', 'it', 'no',
+                 'not', 'of', 'on', 'or', 'such', 'that', 'the', 'their', 'then', 'there', 'these', 'they', 'this',
+                 'to', 'was', 'will', 'with'
+                 ]
+
     def __init__(self):
         self.s = singleton.Singleton()
-        self.r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        redis_port = int( os.getenv('REDIS_PORT') )
+        self.r = redis.Redis(host='localhost', port=redis_port, decode_responses=True)
 
     def cache_coll_if_not(self, collection):
         res = self.ensure_key_exists(collection, None)
@@ -105,7 +114,9 @@ class Cacher:
         # Break the value into words using regex to split by spaces and punctuation
         words = re.findall(r'\w+', value)
         # Construct the search query to match all words, excluding single-letter words
-        search_terms = ' '.join([f'(@search:*{self.search_prep(word)}* | @search:{self.search_prep(word)})' for word in words if len(word) > 1 and self.search_prep(word) not in self.ban_words])
+        search_terms = ' '.join(
+            [f'(@search:*{self.search_prep(word)}* | @search:{self.search_prep(word)})' for word in words if
+             len(word) > 1 and self.search_prep(word) not in self.ban_words])
         search_command = ['FT.SEARCH', f'{key}_idx', search_terms, 'LIMIT', '0', str(num_results)]
         results = self.r.execute_command(*search_command)
         modified_results = []
