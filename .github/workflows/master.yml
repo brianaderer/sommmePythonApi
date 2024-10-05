@@ -53,7 +53,7 @@ jobs:
         with:
           host: 3.15.144.253
           username: bevnotesudo
-          key: ${{ secrets.SSH_DEPLOY_KEY }}
+          key: ${{ secrets.SUDO_SSH_KEY }}
           port: 22
           script: |
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart nginx
