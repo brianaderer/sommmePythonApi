@@ -61,7 +61,7 @@ class Query:
         self.s.Cacher.create_sub_indices()
 
     def update_producers_cache(self):
-        collection = self.props.document('items').collection('producers')
+        collection = self.props.document('items').collection('producer')
         producers = collection.get()
         producer_data = [{producer.id: producer.to_dict()} for producer in producers]
         for producer in producer_data:
@@ -69,7 +69,7 @@ class Query:
             path = ''
             self.s.Cacher.set_data(key='producer:' + key, data=producer[key], path=path)
 
-        collection = self.props.document('items').collection('cuvees')
+        collection = self.props.document('items').collection('cuvee')
         cuvees = collection.get()
         cuvee_data = [{cuvee.id: cuvee.to_dict()} for cuvee in cuvees]
         for cuvee in cuvee_data:
@@ -77,7 +77,7 @@ class Query:
             path = ''
             self.s.Cacher.set_data(key='cuvee:' + key, data=cuvee[key], path=path)
 
-        collection = self.props.document('items').collection('vintages')
+        collection = self.props.document('items').collection('vintage')
         vintages = collection.get()
         vintage_data = [{vintage.id: vintage.to_dict()} for vintage in vintages]
         for vintage in vintage_data:

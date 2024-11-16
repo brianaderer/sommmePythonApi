@@ -17,6 +17,7 @@ class Recommender:
         search_text = self.s.Cacher.search_prep(text)
         filtered_class_name = class_name.replace('"', '')
         filtered_coll = []
+        found_deps = {}
         for d in coll:
             add_to_filtered = False
             key = self.s.Query.get_key(d)
@@ -31,6 +32,7 @@ class Recommender:
                     keyed_item = item[dep_key][0]
                     search_val = self.s.Cacher.search_prep(keyed_item[self.s.Query.get_key(keyed_item)])
                     wine_search_text = wine_val[wine_key]['search_text'] if 'search_text' in wine_val[wine_key] else ''
+                    found_deps[dep_key] = wine_search_text
                     if search_val == wine_search_text:
                         add_to_filtered = True
                         break
@@ -49,4 +51,13 @@ class Recommender:
         sorted_array = sorted(result, key=lambda x: x[self.s.Query.get_key(x)]['similarity'], reverse=False)
         top_100 = sorted_array[:100]
         filtered_array = [{self.s.Query.get_key(item).replace(filtered_class_name + ':', ''): item[self.s.Query.get_key(item)]}for item in top_100]
-        return filtered_array
+        return_list = []
+        for item in filtered_array:
+            for key in list(found_deps.keys()):
+                val = list(item.values())[0][key][0]
+                parsed_val = list(val.values())[0]
+                search_val = self.s.Cacher.search_prep(parsed_val)
+                search_against = self.s.Cacher.search_prep(found_deps[key])
+                if search_val == search_against:
+                    return_list.append(item)
+        return return_list

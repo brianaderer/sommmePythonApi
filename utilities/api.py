@@ -56,7 +56,6 @@ class API:
                 text: str = Form(...),
                 deps: str | None = Form(None),
         ):
-            print('called recs')
             recommender = Recommender()
             data = recommender.get_recommendation(class_name=slug, text=text, deps=deps)
             json_data = json.dumps(data)
