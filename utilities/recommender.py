@@ -52,12 +52,17 @@ class Recommender:
         top_100 = sorted_array[:100]
         filtered_array = [{self.s.Query.get_key(item).replace(filtered_class_name + ':', ''): item[self.s.Query.get_key(item)]}for item in top_100]
         return_list = []
-        for item in filtered_array:
-            for key in list(found_deps.keys()):
-                val = list(item.values())[0][key][0]
-                parsed_val = list(val.values())[0]
-                search_val = self.s.Cacher.search_prep(parsed_val)
-                search_against = self.s.Cacher.search_prep(found_deps[key])
-                if search_val == search_against:
-                    return_list.append(item)
+
+        if len(found_deps) > 0:
+            for item in filtered_array:
+                for key in list(found_deps.keys()):
+                    if key in list(item.values())[0]:
+                        val = list(item.values())[0][key][0]
+                        parsed_val = list(val.values())[0]
+                        search_val = self.s.Cacher.search_prep(parsed_val)
+                        search_against = self.s.Cacher.search_prep(found_deps[key])
+                        if search_val == search_against:
+                            return_list.append(item)
+        else:
+            return_list = filtered_array
         return return_list
