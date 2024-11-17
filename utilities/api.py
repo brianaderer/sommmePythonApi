@@ -1,5 +1,8 @@
+from mimetypes import inited
 from typing import Union, Annotated, Optional
 from fastapi import FastAPI, File, UploadFile, Path, Form, Query
+from lxml.html.builder import FRAME
+from matplotlib.font_manager import json_load
 from pydantic import BaseModel
 import singleton
 import hashlib
@@ -13,6 +16,7 @@ from utilities.recommender import Recommender
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
 from custom_types.Flight import Flight
+from custom_types.UserType import UserType
 from pathlib import Path as PathlibPath  # Avoid conflict with FastAPI's Path
 
 class Item(BaseModel):
@@ -100,6 +104,42 @@ class API:
         ):
             handle_user_wine = HandleUserWine()
             return handle_user_wine.handle_upload(wine=wineData, flight=flightData, owner=owner.replace('"', ''))
+
+        @self.app.post("/api/messageMeta/")
+        async def message_meta(
+                groupId: str=Form(...),
+                message: str=Form(...),
+        ):
+            message_object = json.loads(message)
+            message_object['timestamp'] = self.s.Messages.generate_timestamp()
+            data = {'last_message': message_object}
+            group_str = groupId.replace('"', '')
+            success = self.s.Cacher.set_data('group:' + group_str, data, '', False)
+            return success
+
+        @self.app.post("/api/getRecentGroupInfo")
+        async def get_recent_group_info(
+                groupId: str=Form(...),
+        ):
+            group_str = groupId.replace('"', '')
+            data = self.s.Cacher.get_data('group:' + group_str)
+            if data is not None and len(data) > 0:
+                uid = data[0]['last_message']['owner']
+                user = UserType(decoded_data=self.s.Cacher.get_data('users:' + uid)[0], key=uid)
+                initials = user.get_initials()
+                return {'user': initials, 'data': data[0]}
+            return False
+
+        @self.app.post("/api/getUsername/")
+        async def get_user_names(
+                uids: str = Form(...),
+        ):
+            uids_list = json.loads(uids)
+            names_list = []
+            for uid in uids_list:
+                user = UserType(decoded_data=self.s.Cacher.get_data('users:' + uid)[0], key=uid)
+                names_list.append(user.get_user_name())
+            return json.dumps(names_list)
 
         @self.app.post("/api/createFlight/")
         async def update_user(

@@ -51,6 +51,7 @@ class Messages:
         else:
             doc_ref = message_ref
         doc_ref.set(message)
+        self.s.Cacher.set_data('group:' + group_id, {'last_message': message})
 
     def generate_content_from_share(self, content, user, key, add_headers=0, add_items=0):
         string = ''

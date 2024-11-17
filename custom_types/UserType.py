@@ -81,6 +81,17 @@ class UserType:
             decoded_data['province']) + self.add_space_if_length(decoded_data[
                                                                      'city']) + self.add_space_if_length(decoded_data[
                                                                                                              'screenName'])
+    def get_initials(self):
+        return_str = ''
+        str_list = self.displayName.split(' ')
+        for item in str_list:
+            return_str += item[0]
+        return return_str
+
+    def get_user_name(self):
+        first_and_last = self.firstName + ' ' + self.lastName
+        display_name = self.displayName
+        return display_name
 
     def convert_decoded_to_object(self):
         for key, value in self.decoded_data.items():
