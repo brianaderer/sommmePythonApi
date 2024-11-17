@@ -2,6 +2,7 @@ from mimetypes import inited
 from typing import Union, Annotated, Optional
 from fastapi import FastAPI, File, UploadFile, Path, Form, Query
 from lxml.html.builder import FRAME
+from lxml.xslt import exception
 from matplotlib.font_manager import json_load
 from pydantic import BaseModel
 import singleton
@@ -123,8 +124,11 @@ class API:
         ):
             group_str = groupId.replace('"', '')
             data = self.s.Cacher.get_data('group:' + group_str)
-            if data is not None and len(data) > 0:
-                uid = data[0]['last_message']['owner']
+            if data is not None and data[0] and len(data) > 0:
+                try:
+                    uid = data[0]['last_message']['owner']
+                except exception as e:
+                    return False
                 user = UserType(decoded_data=self.s.Cacher.get_data('users:' + uid)[0], key=uid)
                 initials = user.get_initials()
                 return {'user': initials, 'data': data[0]}
