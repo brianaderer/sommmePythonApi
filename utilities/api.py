@@ -118,7 +118,7 @@ class API:
             success = self.s.Cacher.set_data('group:' + group_str, data, '', False)
             return success
 
-        @self.app.post("/api/getRecentGroupInfo")
+        @self.app.post("/api/getRecentGroupInfo/")
         async def get_recent_group_info(
                 groupId: str=Form(...),
         ):

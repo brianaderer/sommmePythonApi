@@ -57,5 +57,5 @@ jobs:
           port: 22
           script: |
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart nginx
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart gunicorn
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart bevnote_api
             
