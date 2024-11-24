@@ -15,7 +15,7 @@ class FCM:
         orig_user = self.s.Cacher.get_data('users:' + user_id)
         orig_user_object = UserType(decoded_data=orig_user[0], key=user_id)
         from_name = orig_user_object.get_user_name()
-        title = f"You have a new message from {from_name}"
+        title = f"BevNote from {from_name}"
         message_content = message['value']
         body = message_content
         for user in subscribed_users:
