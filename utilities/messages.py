@@ -74,4 +74,3 @@ class Messages:
         # Convert the time to milliseconds and return as an integer
         timestamp = int(current_time * 1000)
         return timestamp
-

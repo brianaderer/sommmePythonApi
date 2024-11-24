@@ -105,17 +105,50 @@ class API:
             handle_user_wine = HandleUserWine()
             return handle_user_wine.handle_upload(wine=wineData, flight=flightData, owner=owner.replace('"', ''))
 
-        @self.app.post("/api/messageMeta/")
-        async def message_meta(
+        @self.app.post("/api/testSendMessage/")
+        async def test_message(
+                uid: str=Form(...),
                 groupId: str=Form(...),
                 message: str=Form(...),
+                users: str=Form(...),
         ):
+            users_data = json.loads(users)
+            clean_uid = uid.replace('"', '')
+            clean_group = json.loads(groupId)
             message_object = json.loads(message)
             message_object['timestamp'] = self.s.Messages.generate_timestamp()
             data = {'last_message': message_object}
             group_str = groupId.replace('"', '')
-            success = self.s.Cacher.set_data('group:' + group_str, data, '', False)
+            success = self.s.FCM.handle_message_send(user_id=clean_uid, group=clean_group, message=message_object, users=users_data)
             return success
+
+        @self.app.post("/api/messageMeta/")
+        async def message_meta(
+                uid: str=Form(...),
+                groupId: str=Form(...),
+                message: str=Form(...),
+                users: str=Form(...),
+        ):
+            users_data = json.loads(users)
+            clean_uid = uid.replace('"', '')
+            message_object = json.loads(message)
+            message_object['timestamp'] = self.s.Messages.generate_timestamp()
+            data = {'last_message': message_object}
+            clean_group = json.loads(groupId)
+            group_str = groupId.replace('"', '')
+            success = self.s.Cacher.set_data('group:' + group_str, data, '', False)
+            if success:
+                self.s.FCM.handle_message_send(user_id=clean_uid, group=clean_group, message=message_object, users=users_data)
+            return success
+
+        @self.app.post("/api/manageDevice/")
+        async def manage_device(
+                userId: str=Form(...),
+                deviceId: str=Form(...),
+                action: str=Form(...),
+        ):
+            return self.s.FCM.handle_device(user_id=userId, device_id=deviceId, action=action)
+
 
         @self.app.post("/api/getRecentGroupInfo/")
         async def get_recent_group_info(

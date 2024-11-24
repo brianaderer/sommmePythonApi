@@ -20,6 +20,7 @@ class UserType:
     firstName = None
     lastName = None
     decoded_data = None
+    device_ids = None
 
     def __init__(self, decoded_data: dict, key: str):
         self.first = None
@@ -58,6 +59,8 @@ class UserType:
             decoded_data['lastName'] = ''
         if 'addSalutations' not in decoded_data:
             decoded_data['addSalutations'] = True
+        if 'device_ids' not in decoded_data:
+            decoded_data['device_ids'] = []
         decoded_data['value'] = self.create_user_search(decoded_data['preferredEmail'], decoded_data)
         if len(decoded_data['firstName']) and len(decoded_data['lastName']):
             decoded_data['displayName'] = decoded_data['firstName'] + ' ' + decoded_data['lastName']
@@ -74,13 +77,23 @@ class UserType:
 
     def create_user_search(self, email, decoded_data):
         self.first = True
-        name = decoded_data['firstName'] + ' ' + decoded_data['lastName'] if ('firstName' and 'lastName' in decoded_data) and len( decoded_data['firstName']) and len(decoded_data['lastName']) else decoded_data['displayName']
+        name = decoded_data['firstName'] + ' ' + decoded_data['lastName'] if (
+                                                                                         'firstName' and 'lastName' in decoded_data) and len(
+            decoded_data['firstName']) and len(decoded_data['lastName']) else decoded_data['displayName']
         return self.add_space_if_length(name) + self.add_space_if_length(
             email) + self.add_space_if_length(decoded_data['company']) + self.add_space_if_length(
             decoded_data['country']) + self.add_space_if_length(
             decoded_data['province']) + self.add_space_if_length(decoded_data[
-                                                                     'city']) + self.add_space_if_length(decoded_data[
-                                                                                                             'screenName'])
+                                                                     'city']) + self.add_space_if_length(
+            decoded_data['screenName'])
+
+    def add_device(self, device_id):
+        if device_id not in self.device_ids:
+            self.device_ids.append(device_id)
+
+    def get_device_ids(self):
+        return self.device_ids
+
     def get_initials(self):
         return_str = ''
         str_list = self.displayName.split(' ')

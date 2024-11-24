@@ -9,6 +9,7 @@ from utilities.crons import Crons
 from utilities.user import User
 from utilities.handle_user_wine import HandleUserWine
 from utilities.cleanse_wine import CleanseWine
+from utilities.fcm import FCM
 # from utilities.flight import Flight
 from utilities.group import Group
 from utilities.shares import Shares
@@ -43,4 +44,5 @@ class Singleton:
             cls._instance.P3 = P3()
             cls._instance.Dependencies = Dependencies()
             cls._instance.Props = Props()
+            cls._instance.FCM = FCM()
         return cls._instance
