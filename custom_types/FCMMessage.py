@@ -66,28 +66,14 @@ class FCMMessage:
         }
 
         payload = {
-              "message": {
+            "message": {
                 "token": self.token,
                 "notification": {
-                  "title": self.title,
-                  "body": self.body
+                    "title": self.title,
+                    "body": self.body
                 },
-                "apns": {
-                  "headers": {
-                    "apns-topic": "com.bevnote.somm725"
-                  },
-                  "payload": {
-                    "aps": {
-                      "alert": {
-                        "title": self.title,
-                        "body": self.body
-                      }
-                    }
-                  }
-                }
-              }
+                "data": self.data
             }
-
-
+        }
         response = requests.post(self.url, headers=headers, data=json.dumps(payload))
         return response.json()
