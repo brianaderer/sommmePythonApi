@@ -66,32 +66,28 @@ class FCMMessage:
         }
 
         payload = {
-            "message": {
+              "message": {
                 "token": self.token,
                 "notification": {
-                    "title": self.title,
-                    "body": self.body
+                  "title": self.title,
+                  "body": self.body
                 },
-                "data": self.data,
                 "apns": {
-                    "headers": {
-                        "apns-priority": "10",  # High priority for immediate delivery
-                        "apns-topic": "com.bevnote.somm725"  # Replace with your app's bundle ID
-                    },
-                    "payload": {
-                        "aps": {
-                            "alert": {
-                                "title": self.title,
-                                "body": self.body
-                            },
-                            "badge": 1,  # Optional: Set the app badge count
-                            "sound": "default"  # Optional: Play a sound
-                        },
-                        "customData": self.data  # Custom data if needed
+                  "headers": {
+                    "apns-topic": "com.bevnote.somm725"
+                  },
+                  "payload": {
+                    "aps": {
+                      "alert": {
+                        "title": self.title,
+                        "body": self.body
+                      }
                     }
+                  }
                 }
+              }
             }
-        }
+
 
         response = requests.post(self.url, headers=headers, data=json.dumps(payload))
         return response.json()
