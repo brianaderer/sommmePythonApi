@@ -3,6 +3,7 @@ from custom_types.Wine import Wine
 from custom_types.Error import Error
 from custom_types.RichWine import RichWine
 from typing import List, AnyStr
+from firebase_admin import firestore
 import re
 import time
 
@@ -144,6 +145,7 @@ class Flight:
         flight_dict['rep_contact'] = {'phone': self.rep_phone, 'email': self.rep_email, 'title': self.rep_title,
                                       'name': self.sales_rep}
         flight_dict['timestamp'] = time.time()
+        flight_dict['lastEdited'] = firestore.SERVER_TIMESTAMP
         doc_ref = self.s.Firebase.db.collection('flights').document()
         self.ref_id = doc_ref.id
         doc_ref.set(flight_dict)
