@@ -91,6 +91,11 @@ class UserType:
         if device_id not in self.device_ids:
             self.device_ids.append(device_id)
 
+    def delete_device(self, device_id):
+        print(self.device_ids)
+        self.device_ids.remove(device_id)
+        print(self.device_ids)
+
     def get_device_ids(self):
         return self.device_ids
 

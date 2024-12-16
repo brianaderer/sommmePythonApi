@@ -147,6 +147,7 @@ class API:
                 deviceId: str=Form(...),
                 action: str=Form(...),
         ):
+
             return self.s.FCM.handle_device(user_id=userId, device_id=deviceId, action=action)
 
 
@@ -170,8 +171,10 @@ class API:
             uids_list = json.loads(uids)
             names_list = []
             for uid in uids_list:
-                user = UserType(decoded_data=self.s.Cacher.get_data('users:' + uid)[0], key=uid)
-                names_list.append(user.get_user_name())
+                response = self.s.Cacher.get_data('users:' + uid)
+                if response is not None:
+                    user = UserType(decoded_data=response[0], key=uid)
+                    names_list.append(user.get_user_name())
             return json.dumps(names_list)
 
         @self.app.post("/api/createFlight/")

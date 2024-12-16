@@ -68,12 +68,18 @@ class FCMMessage:
         payload = {
             "message": {
                 "token": self.token,
-                "notification": {
-                    "title": self.title,
-                    "body": self.body
+                "android": {
+                    "priority": "high",
+                    "notification": {
+                        "title": self.title,
+                        "body": self.body,
+                        "sound": "default",
+                    },
                 },
+
                 "data": self.data
             }
         }
         response = requests.post(self.url, headers=headers, data=json.dumps(payload))
+        print(response.json())
         return response.json()

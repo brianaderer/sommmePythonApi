@@ -1,5 +1,7 @@
 import json
 import os
+from http.cookiejar import user_domain_match
+
 import singleton
 from custom_types.FCMMessage import FCMMessage
 from custom_types.UserType import UserType
@@ -24,12 +26,16 @@ class FCM:
             for device in user_data.get_device_ids():
                 message_object = FCMMessage(device)
                 message_object.set_notification(title, body)
-                message_object.set_data({'group': group})
+                message_object.set_data({'group': group, 'type': 'message'})
                 message_object.send_message()
 
     def handle_device(self, user_id, device_id, action):
         user_data = self.s.Cacher.get_data('users:' + user_id)
         user = UserType( decoded_data=user_data[0], key=user_id )
-        user.add_device(device_id=device_id)
+        print(action)
+        if action == 'add':
+            user.add_device(device_id=device_id)
+        elif action == 'delete':
+            user.delete_device(device_id=device_id)
         data = user.return_data()
         return self.s.Cacher.set_data('users:' + user_id, data)
