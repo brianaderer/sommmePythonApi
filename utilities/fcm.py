@@ -31,11 +31,13 @@ class FCM:
 
     def handle_device(self, user_id, device_id, action):
         user_data = self.s.Cacher.get_data('users:' + user_id)
-        user = UserType( decoded_data=user_data[0], key=user_id )
-        print(action)
-        if action == 'add':
-            user.add_device(device_id=device_id)
-        elif action == 'delete':
-            user.delete_device(device_id=device_id)
-        data = user.return_data()
-        return self.s.Cacher.set_data('users:' + user_id, data)
+        if device_id is not None and device_id:
+            user = UserType( decoded_data=user_data[0], key=user_id )
+            if action == 'add':
+                user.add_device(device_id=device_id)
+            elif action == 'delete':
+                user.delete_device(device_id=device_id)
+            data = user.return_data()
+            return self.s.Cacher.set_data('users:' + user_id, data)
+        else:
+            return False

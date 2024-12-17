@@ -147,6 +147,7 @@ class API:
                 deviceId: str=Form(...),
                 action: str=Form(...),
         ):
+            print(deviceId)
 
             return self.s.FCM.handle_device(user_id=userId, device_id=deviceId, action=action)
 
