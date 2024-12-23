@@ -119,7 +119,6 @@ class Parser:
     def parse_data(self, elements):
         for element in elements:
             text = element.text()
-            print(text)
             parse_list = (text.split('\n'))
             if (not self.contains_pattern(parse_list[0], self.unit_pattern)
                 and not self.contains_pattern(parse_list[0], self.case_pattern)) \

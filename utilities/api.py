@@ -85,9 +85,10 @@ class API:
                 data: str = Form(...),
                 groupId: str = Form(...),
                 ownerId: str = Form(...),
-                key: str = Form(...),
+                prevShares: str = Form(...),
+                users: str = Form(...),
         ):
-            return self.s.Shares.handle_group_share(data=data, group_id=groupId, owner_id=ownerId, key=key)
+            return self.s.Shares.handle_group_share(data=data, group_id=groupId, owner_id=ownerId, prev_shares=prevShares, users=users)
 
         @self.app.post("/api/groupRequest/")
         async def update_user(
@@ -129,17 +130,7 @@ class API:
                 message: str=Form(...),
                 users: str=Form(...),
         ):
-            users_data = json.loads(users)
-            clean_uid = uid.replace('"', '')
-            message_object = json.loads(message)
-            message_object['timestamp'] = self.s.Messages.generate_timestamp()
-            data = {'last_message': message_object}
-            clean_group = json.loads(groupId)
-            group_str = groupId.replace('"', '')
-            success = self.s.Cacher.set_data('group:' + group_str, data, '', False)
-            if success:
-                self.s.FCM.handle_message_send(user_id=clean_uid, group=clean_group, message=message_object, users=users_data)
-            return success
+            return self.s.Messages.handle_message_meta(uid=uid, group_id=groupId, message=message, users=users)
 
         @self.app.post("/api/manageDevice/")
         async def manage_device(

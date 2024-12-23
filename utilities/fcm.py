@@ -1,7 +1,3 @@
-import json
-import os
-from http.cookiejar import user_domain_match
-
 import singleton
 from custom_types.FCMMessage import FCMMessage
 from custom_types.UserType import UserType
@@ -14,7 +10,8 @@ class FCM:
 
     def handle_message_send(self, user_id, message, users, group):
         subscribed_users = [item for item in users if item != user_id]
-        orig_user = self.s.Cacher.get_data('users:' + user_id)
+        clean_user_id = user_id.replace('"', '')
+        orig_user = self.s.Cacher.get_data('users:' + clean_user_id)
         orig_user_object = UserType(decoded_data=orig_user[0], key=user_id)
         from_name = orig_user_object.get_user_name()
         title = f"BevNote from {from_name}"

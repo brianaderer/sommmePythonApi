@@ -81,5 +81,4 @@ class FCMMessage:
             }
         }
         response = requests.post(self.url, headers=headers, data=json.dumps(payload))
-        print(response.json())
         return response.json()
