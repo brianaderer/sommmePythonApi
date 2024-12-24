@@ -76,9 +76,24 @@ class FCMMessage:
                         "sound": "default",
                     },
                 },
-
+                "apns": {
+                    "headers": {
+                        "apns-priority": "10",
+                    },
+                    "payload": {
+                        "aps": {
+                            "alert": {
+                                "title": self.title,
+                                "body": self.body,
+                            },
+                            "sound": "default",
+                            "badge": 1,  # Optional: Update app icon badge
+                        }
+                    },
+                },
                 "data": self.data
             }
         }
+
         response = requests.post(self.url, headers=headers, data=json.dumps(payload))
         return response.json()
